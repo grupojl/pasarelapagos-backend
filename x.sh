@@ -1,17 +1,27 @@
 #!/usr/bin/env bash
 # =============================================================================
-# fix-railway-pnpm-builds-v2.sh
+# fix-railway-final.sh
 #
-# Aplica el fix de pnpm build scripts para Railway en:
-#   - chat-ia-lang        (chat-ia-back)
-#   - pasarela-pagos      (pagos-back)
+# Solución definitiva para ambos repos.
 #
-# Causa: pnpm 9+ / Corepack pnpm 11+ bloquea postinstall scripts por defecto.
-# Fix:   "pnpm.onlyBuiltDependencies" en package.json + .npmrc
+# CAUSA RAÍZ (después de analizar los XMLs):
+#   Ningún package.json tiene "packageManager" definido.
+#   → Corepack descarga pnpm@latest = pnpm 11
+#   → pnpm 11 ignora package.json["pnpm"] Y requiere pnpm-workspace.yaml
+#   → el pnpm-workspace.yaml generado localmente no se committea con
+#     el lockfile correcto → Railway sigue fallando
 #
-# USO — correr desde la raíz del repo correspondiente:
-#   cd chat-ia-back   && bash fix-railway-pnpm-builds-v2.sh
-#   cd pasarela-pagos && bash fix-railway-pnpm-builds-v2.sh
+# FIX:
+#   1. Fijar "packageManager": "pnpm@10.11.0" en package.json
+#      → Corepack usa exactamente esa versión (no pnpm 11)
+#      → pnpm 10 SÍ lee package.json["pnpm"].onlyBuiltDependencies
+#   2. Agregar pnpm.onlyBuiltDependencies con la lista exacta del error
+#   3. Regenerar lockfile con pnpm 10
+#   4. Borrar pnpm-workspace.yaml si existe (no lo necesitamos más)
+#
+# USO:
+#   cd chat-ia-back   && bash fix-railway-final.sh
+#   cd pasarela-pagos && bash fix-railway-final.sh
 # =============================================================================
 
 set -euo pipefail
@@ -22,127 +32,104 @@ ok()   { echo -e "${GREEN}✓${NC} $1"; }
 warn() { echo -e "${YELLOW}⚠${NC}  $1"; }
 fail() { echo -e "${RED}✗${NC} $1"; exit 1; }
 
-# ─── Detectar proyecto ────────────────────────────────────────────────────────
-if [ ! -f "package.json" ]; then
-  fail "No se encontró package.json — corré desde la raíz del proyecto"
-fi
+[ -f "package.json" ] || fail "No se encontró package.json"
 
 PKG_NAME=$(node -e "process.stdout.write(require('./package.json').name || '')")
 
 case "$PKG_NAME" in
   "chat-ia-lang")
-    PROJECT_LABEL="chat-ia-back"
-    # Lista exacta del error de Railway (primer build)
-    ALLOWED_BUILDS='[
-      "@firebase/util",
-      "@nestjs/core",
-      "@prisma/engines",
-      "@scarf/scarf",
-      "bcrypt",
-      "msgpackr-extract",
-      "prisma",
-      "protobufjs",
-      "unrs-resolver"
-    ]'
+    LABEL="chat-ia-back"
+    BUILT_DEPS='["@firebase/util","@nestjs/core","@prisma/engines","@scarf/scarf","bcrypt","msgpackr-extract","prisma","protobufjs","unrs-resolver"]'
     ;;
   "pasarela-pagos")
-    PROJECT_LABEL="pasarela-pagos"
-    # Lista exacta del error de Railway (segundo build)
-    # Diferencias vs chat-ia: +argon2, +protobufjs@8.0.1, sin bcrypt (usa bcryptjs)
-    ALLOWED_BUILDS='[
-      "@firebase/util",
-      "@nestjs/core",
-      "@prisma/engines",
-      "@scarf/scarf",
-      "argon2",
-      "msgpackr-extract",
-      "prisma",
-      "protobufjs",
-      "unrs-resolver"
-    ]'
+    LABEL="pasarela-pagos"
+    BUILT_DEPS='["@firebase/util","@nestjs/core","@prisma/engines","@scarf/scarf","argon2","msgpackr-extract","prisma","protobufjs","unrs-resolver"]'
     ;;
   *)
-    fail "Proyecto no reconocido: '$PKG_NAME'. Esperado: 'chat-ia-lang' o 'pasarela-pagos'"
+    fail "Repo no reconocido: '$PKG_NAME'"
     ;;
 esac
 
-echo -e "\n${BOLD}Aplicando fix Railway pnpm builds → ${CYAN}${PROJECT_LABEL}${NC}\n"
+echo -e "\n${BOLD}Fix Railway definitivo → ${CYAN}${LABEL}${NC}\n"
 
-# ─── 1. .npmrc ────────────────────────────────────────────────────────────────
-log "Escribiendo .npmrc..."
-
-cat > .npmrc << 'EOF'
-# pnpm 9+ / Corepack pnpm 11+: habilita postinstall scripts en CI/Railway.
-# Sin esto: [ERR_PNPM_IGNORED_BUILDS] bloquea la instalación.
-enable-pre-post-scripts=true
-
-# Peers automáticos sin prompts interactivos en CI
-auto-install-peers=true
-
-# Hoisted: node-gyp (argon2, bcrypt) encuentra los headers de Node en Railway
-node-linker=hoisted
-EOF
-
-ok ".npmrc creado"
-
-# ─── 2. Patch package.json ────────────────────────────────────────────────────
-log "Actualizando package.json con pnpm.onlyBuiltDependencies..."
+# ─── 1. Patchear package.json ─────────────────────────────────────────────────
+log "Actualizando package.json..."
 
 node - << JSEOF
-const fs      = require('fs');
-const pkgPath = './package.json';
-const pkg     = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+const fs  = require('fs');
+const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 
-if (!pkg.pnpm) pkg.pnpm = {};
+// Fijar versión de pnpm — Corepack usará EXACTAMENTE esta, no pnpm@latest
+pkg.packageManager = 'pnpm@10.11.0';
 
-pkg.pnpm.onlyBuiltDependencies = ${ALLOWED_BUILDS};
+// pnpm 10 SÍ lee esta sección de package.json
+pkg.pnpm = {
+  onlyBuiltDependencies: ${BUILT_DEPS}
+};
 
-fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
-console.log('  pnpm.onlyBuiltDependencies escrito en package.json');
+fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+console.log('  packageManager: pnpm@10.11.0');
+console.log('  pnpm.onlyBuiltDependencies:', ${BUILT_DEPS}.join(', '));
 JSEOF
 
 ok "package.json actualizado"
 
-# Verificar JSON válido
-node -e "JSON.parse(require('fs').readFileSync('package.json','utf8'))" \
-  && ok "JSON válido"
-
-# ─── 3. Mostrar resultado ─────────────────────────────────────────────────────
-echo ""
-echo -e "${BOLD}── .npmrc ──────────────────────────────────────────────────────${NC}"
-cat .npmrc
-echo ""
-echo -e "${BOLD}── pnpm.onlyBuiltDependencies (package.json) ───────────────────${NC}"
-node -e "const p=require('./package.json'); console.log(JSON.stringify(p.pnpm, null, 2))"
-echo ""
-
-# ─── 4. Actualizar lockfile ───────────────────────────────────────────────────
-if command -v pnpm &>/dev/null; then
-  log "Regenerando pnpm-lock.yaml (--no-frozen-lockfile)..."
-  pnpm install --no-frozen-lockfile 2>&1 | grep -E '(Progress|done|warn|ERR)' || true
-  ok "Lockfile actualizado"
-else
-  warn "pnpm no disponible aquí — ejecutar manualmente:"
-  warn "  pnpm install --no-frozen-lockfile"
+# ─── 2. Borrar pnpm-workspace.yaml si existe (limpieza) ──────────────────────
+if [ -f "pnpm-workspace.yaml" ]; then
+  rm pnpm-workspace.yaml
+  ok "pnpm-workspace.yaml eliminado (ya no necesario)"
 fi
 
-# ─── 5. Próximos pasos ────────────────────────────────────────────────────────
-echo -e "
-${BOLD}Próximos pasos:${NC}
+# ─── 3. Borrar .npmrc si existe (limpieza) ───────────────────────────────────
+if [ -f ".npmrc" ]; then
+  rm .npmrc
+  ok ".npmrc eliminado"
+fi
 
-  ${CYAN}git add package.json .npmrc pnpm-lock.yaml
-  git commit -m 'fix: allow pnpm build scripts for native deps (Railway)'
+# ─── 4. Activar pnpm 10 con corepack y regenerar lockfile ────────────────────
+log "Activando pnpm@10.11.0 con corepack..."
+corepack prepare pnpm@10.11.0 --activate 2>/dev/null || {
+  warn "corepack prepare falló — intentando con npm install -g pnpm@10.11.0"
+  npm install -g pnpm@10.11.0 --quiet
+}
+
+PNPM_VERSION=$(pnpm --version 2>/dev/null || echo "desconocida")
+ok "pnpm activo: $PNPM_VERSION"
+
+log "Regenerando pnpm-lock.yaml con pnpm 10..."
+pnpm install --no-frozen-lockfile 2>&1 | tail -5
+ok "Lockfile regenerado con pnpm 10"
+
+# ─── 5. Verificar que el lockfile tiene los build approvals ──────────────────
+log "Verificando lockfile..."
+if grep -q "onlyBuiltDependencies\|neverBuiltDependencies" pnpm-lock.yaml 2>/dev/null; then
+  ok "Lockfile contiene configuración de build scripts"
+else
+  warn "Lockfile no muestra onlyBuiltDependencies explícito — normal en pnpm 10 (se lee de package.json en runtime)"
+fi
+
+# ─── 6. Mostrar resultado final ───────────────────────────────────────────────
+echo ""
+echo -e "${BOLD}── package.json (secciones relevantes) ────────────────────────${NC}"
+node -e "
+const p = require('./package.json');
+console.log('packageManager:', p.packageManager);
+console.log('pnpm.onlyBuiltDependencies:', JSON.stringify(p.pnpm?.onlyBuiltDependencies, null, 2));
+"
+echo ""
+
+# ─── 7. Próximos pasos ────────────────────────────────────────────────────────
+echo -e "
+${BOLD}Archivos a commitear:${NC}
+  ${CYAN}git add package.json pnpm-lock.yaml
+  git rm --cached pnpm-workspace.yaml .npmrc 2>/dev/null || true
+  git commit -m 'fix: pin pnpm@10.11.0 via packageManager + onlyBuiltDependencies'
   git push${NC}
 
-${BOLD}Railway redesplegará automáticamente al detectar el push.${NC}
-
-${BOLD}Si después sigue fallando con argon2 / node-gyp:${NC}
-  Crear nixpacks.toml en la raíz del repo:
-
-  ${CYAN}[phases.setup]
-  nixPkgs = ['python3', 'gcc', 'make', 'libffi']${NC}
-
-  Eso instala las herramientas de compilación que node-gyp necesita.
+${BOLD}Por qué funciona ahora:${NC}
+  - packageManager fijado → Corepack usa pnpm 10, no descarga pnpm 11
+  - pnpm 10 lee package.json[\"pnpm\"].onlyBuiltDependencies sin necesitar workspace.yaml
+  - lockfile regenerado con pnpm 10 → --frozen-lockfile pasa en Railway
 "
 
-ok "Fix aplicado → ${PROJECT_LABEL} listo para redesplegar en Railway 🚀"
+ok "${LABEL} → listo para Railway 🚀"
