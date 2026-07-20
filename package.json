@@ -127,5 +127,19 @@
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
+  },
+  "packageManager": "pnpm@10.11.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@firebase/util",
+      "@nestjs/core",
+      "@prisma/engines",
+      "@scarf/scarf",
+      "argon2",
+      "msgpackr-extract",
+      "prisma",
+      "protobufjs",
+      "unrs-resolver"
+    ]
   }
 }
