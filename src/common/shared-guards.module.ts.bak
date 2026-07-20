@@ -1,12 +1,8 @@
 // src/common/shared-guards.module.ts
 //
-// Módulo que agrupa y exporta todos los guards de aplicación para que
-// cualquier módulo de negocio (PaymentsModule, WebhooksModule, etc.)
-// pueda usarlos con @UseGuards() sin repetir imports de dependencias.
-//
-// Patrón: Feature modules importan SharedGuardsModule en lugar de
-//         importar FirebaseModule + TenantsModule individualmente.
-import { Module } from '@nestjs/common';
+// Importado por módulos de feature que usan guards con @UseGuards().
+// Centraliza todas las dependencias que los guards necesitan.
+import { Module }              from '@nestjs/common';
 import { FirebaseModule }      from '../modules/firebase/firebase.module';
 import { TenantsModule }       from '../modules/tenants/tenants.module';
 import { FirebaseAuthService } from '../modules/firebase/firebase-auth.service';
@@ -18,7 +14,7 @@ import { WriteGuard }          from './guards/write.guard';
 import { PciGuard }            from './guards/pci.guard';
 
 @Module({
-  imports: [FirebaseModule, TenantsModule],
+  imports:  [FirebaseModule, TenantsModule],
   providers: [
     FirebaseAuthService,
     AuthGuard,

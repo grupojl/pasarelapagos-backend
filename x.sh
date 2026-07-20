@@ -1,61 +1,34 @@
 #!/usr/bin/env bash
 # =============================================================================
-# fix-pagos-auth-module-v2.sh
-# Fix definitivo: AuthModule no debe importar SharedGuardsModule —
-# es quien provee las piezas base (FirebaseAuthService).
-# AuthModule solo necesita FirebaseModule + TenantsModule directamente.
-# SharedGuardsModule los importa a él, no al revés.
+# fix-pagos-global-guards.sh
+# Fix definitivo: el DI container crea instancias separadas de AuthGuard
+# por módulo, y en PaymentsModule no encuentra ApiKeyService porque está
+# resolviendo desde el scope de AuthModule (que también lo declara).
+#
+# Solución: hacer SharedGuardsModule @Global() — una sola instancia de cada
+# guard en todo el contenedor. Además limpiar AuthModule para que NO declare
+# AuthGuard (evitar registros duplicados que confunden al container).
 # =============================================================================
 set -euo pipefail
 
-AUTH="src/modules/auth/auth.module.ts"
-
-echo "🔍  Verificando $AUTH ..."
-if [ ! -f "$AUTH" ]; then
-  echo "❌  No se encontró $AUTH — corré desde la raíz del repo pagos-back"
+echo "🔍  Verificando estructura..."
+if [ ! -f "src/common/shared-guards.module.ts" ]; then
+  echo "❌  No se encontró src/common/shared-guards.module.ts"
+  echo "    Corré desde la raíz del repo pagos-back"
   exit 1
 fi
 
-cp "$AUTH" "${AUTH}.bak"
-echo "💾  Backup en ${AUTH}.bak"
+# ── 1. SharedGuardsModule → @Global() ────────────────────────────────────────
+echo "🔧  Haciendo SharedGuardsModule global..."
+cp src/common/shared-guards.module.ts src/common/shared-guards.module.ts.bak
 
-cat > "$AUTH" << 'TSEOF'
-// src/modules/auth/auth.module.ts
-//
-// Módulo base de autenticación. Provee FirebaseAuthService.
-// NO importa SharedGuardsModule — es quien alimenta a SharedGuardsModule.
-// Dependencias directas: FirebaseModule (Firebase Admin) + TenantsModule (ApiKeyService).
-import { Module }              from '@nestjs/common';
-import { AuthController }      from './auth.controller';
-import { FirebaseModule }      from '../firebase/firebase.module';
-import { TenantsModule }       from '../tenants/tenants.module';
-import { FirebaseAuthService } from '../firebase/firebase-auth.service';
-import { AuthGuard }           from '../../common/guards/auth.guard';
-
-@Module({
-  imports:     [FirebaseModule, TenantsModule],
-  controllers: [AuthController],
-  providers:   [FirebaseAuthService, AuthGuard],
-  exports:     [FirebaseAuthService, AuthGuard],
-})
-export class AuthModule {}
-TSEOF
-
-echo "✅  auth.module.ts corregido"
-
-# SharedGuardsModule también debe importar FirebaseModule + TenantsModule
-# directamente (no depender de AuthModule para evitar dependencia circular)
-SHARED="src/common/shared-guards.module.ts"
-echo "🔧  Verificando SharedGuardsModule..."
-
-cp "$SHARED" "${SHARED}.bak"
-
-cat > "$SHARED" << 'TSEOF'
+cat > src/common/shared-guards.module.ts << 'TSEOF'
 // src/common/shared-guards.module.ts
 //
-// Importado por módulos de feature que usan guards con @UseGuards().
-// Centraliza todas las dependencias que los guards necesitan.
-import { Module }              from '@nestjs/common';
+// @Global(): una sola instancia de cada guard en todo el contenedor.
+// Importado una única vez en AppModule — todos los demás módulos pueden
+// usar @UseGuards() sin necesidad de importar este módulo individualmente.
+import { Global, Module }      from '@nestjs/common';
 import { FirebaseModule }      from '../modules/firebase/firebase.module';
 import { TenantsModule }       from '../modules/tenants/tenants.module';
 import { FirebaseAuthService } from '../modules/firebase/firebase-auth.service';
@@ -66,6 +39,7 @@ import { RolesGuard }          from './guards/roles.guard';
 import { WriteGuard }          from './guards/write.guard';
 import { PciGuard }            from './guards/pci.guard';
 
+@Global()
 @Module({
   imports:  [FirebaseModule, TenantsModule],
   providers: [
@@ -89,11 +63,55 @@ import { PciGuard }            from './guards/pci.guard';
 })
 export class SharedGuardsModule {}
 TSEOF
+echo "✅  SharedGuardsModule ahora es @Global()"
 
-echo "✅  SharedGuardsModule corregido"
+# ── 2. AuthModule — sacar AuthGuard de providers/exports (ya es global) ───────
+echo "🔧  Limpiando AuthModule..."
+cp src/modules/auth/auth.module.ts src/modules/auth/auth.module.ts.bak
+
+cat > src/modules/auth/auth.module.ts << 'TSEOF'
+// src/modules/auth/auth.module.ts
+//
+// Módulo de autenticación. Solo provee FirebaseAuthService y el controller.
+// AuthGuard, TenantGuard, etc. viven en SharedGuardsModule (@Global) —
+// no se re-declaran aquí para evitar instancias duplicadas en el container.
+import { Module }              from '@nestjs/common';
+import { AuthController }      from './auth.controller';
+import { FirebaseModule }      from '../firebase/firebase.module';
+import { TenantsModule }       from '../tenants/tenants.module';
+import { FirebaseAuthService } from '../firebase/firebase-auth.service';
+
+@Module({
+  imports:     [FirebaseModule, TenantsModule],
+  controllers: [AuthController],
+  providers:   [FirebaseAuthService],
+  exports:     [FirebaseAuthService],
+})
+export class AuthModule {}
+TSEOF
+echo "✅  AuthModule limpio (sin AuthGuard duplicado)"
+
+# ── 3. AppModule — importar SharedGuardsModule una sola vez ──────────────────
+echo "🔧  Verificando AppModule..."
+APP="src/app.module.ts"
+
+if grep -q "SharedGuardsModule" "$APP"; then
+  echo "⚠️  SharedGuardsModule ya está en AppModule — sin cambios"
+else
+  cp "$APP" "${APP}.bak"
+  # Insertar import del módulo después de la línea de FirebaseModule
+  sed -i "s|import { FirebaseModule } from './modules/firebase/firebase.module';|import { FirebaseModule }    from './modules/firebase/firebase.module';\nimport { SharedGuardsModule } from './common/shared-guards.module';|" "$APP"
+  # Agregar SharedGuardsModule en el array de imports del @Module (después de FirebaseModule)
+  sed -i "s|FirebaseModule,|FirebaseModule,\n    SharedGuardsModule,|" "$APP"
+  echo "✅  SharedGuardsModule agregado a AppModule"
+fi
+
+# ── 4. PaymentsModule y WebhooksModule — pueden quitar SharedGuardsModule ────
+#       ya que es @Global(), pero dejarlo no hace daño — NestJS deduplica.
 echo ""
-echo "📄  Estado final:"
-echo "   AuthModule       → imports: [FirebaseModule, TenantsModule]"
-echo "   SharedGuardsModule → imports: [FirebaseModule, TenantsModule]"
-echo "   PaymentsModule   → imports: [SharedGuardsModule, ...]"
-echo "   WebhooksModule   → imports: [SharedGuardsModule, ...]"
+echo "📄  Resumen:"
+echo "   SharedGuardsModule es @Global() → una instancia, accesible en todo el app"
+echo "   AuthModule         → sin AuthGuard duplicado"  
+echo "   AppModule          → importa SharedGuardsModule"
+echo "   PaymentsModule     → puede mantener el import (idempotente con @Global)"
+echo "   WebhooksModule     → ídem"

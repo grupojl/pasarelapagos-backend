@@ -76,6 +76,7 @@ src/
       pii.service.ts
     types/
       express.d.ts
+    shared-guards.module.ts
   config/
     env.validation.ts
   modules/
@@ -85,6 +86,7 @@ src/
     auth/
       auth.controller.ts
       auth.module.ts
+      auth.module.ts.bak2
     firebase/
       firebase-auth.service.ts
       firebase.module.ts
@@ -470,16 +472,6 @@ async function main() {
 main()
   .catch(console.error)
   .finally(() => prisma.$disconnect());
-```
-
-## File: src/common/constants/queues.ts
-```typescript
-export const QUEUE_WEBHOOKS   = 'webhooks:process';
-export const QUEUE_RECONCILE  = 'payments:reconcile';
-export const QUEUE_DLQ        = 'payments:dlq';
-
-export const JOB_PROCESS_WEBHOOK   = 'process-webhook';
-export const JOB_RECONCILE_PAYMENT = 'reconcile-payment';
 ```
 
 ## File: src/common/decorators/org.decorator.ts
@@ -1086,70 +1078,6 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException(
         `Rol '${user.role}' no tiene acceso. Requerido: ${required.join(' | ')}`,
       );
-    }
-
-    return true;
-  }
-}
-```
-
-## File: src/common/guards/tenant-throttler.guard.ts
-```typescript
-import {
-  ExecutionContext,
-  Injectable,
-  Inject,
-} from '@nestjs/common';
-import { ThrottlerGuard, ThrottlerException, ThrottlerStorage } from '@nestjs/throttler';
-import type { ThrottlerModuleOptions } from '@nestjs/throttler';
-import { Reflector } from '@nestjs/core';
-import Redis from 'ioredis';
-import { REDIS_CLIENT } from '../../modules/redis/redis.module';
-import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
-
-/**
- * Rate limiter por tenant usando Redis como storage.
- *
- * Clave:  rl:{tenantId}:{windowStart}
- * Límite: configurable por env (THROTTLE_LIMIT_PER_TENANT, default 200 req/min)
- *
- * Las rutas públicas (webhooks, health) están exentas.
- */
-@Injectable()
-export class TenantThrottlerGuard extends ThrottlerGuard {
-  constructor(
-    @Inject(REDIS_CLIENT) private readonly redis: Redis,
-    private readonly reflectorInstance: Reflector,
-    options: ThrottlerModuleOptions,
-    storageService: ThrottlerStorage,
-    reflector: Reflector,
-  ) {
-    super(options, storageService, reflector);
-  }
-
-  override async canActivate(context: ExecutionContext): Promise<boolean> {
-    const isPublic = this.reflectorInstance.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-    if (isPublic) return true;
-
-    const req    = context.switchToHttp().getRequest<Record<string, any>>();
-    const tenant = req['tenant'] as { id: string } | undefined;
-    if (!tenant) return true;
-
-    const ttl    = Number(process.env.THROTTLE_TTL    ?? 60);
-    const limit  = Number(process.env.THROTTLE_LIMIT_PER_TENANT ?? process.env.THROTTLE_LIMIT ?? 200);
-    const window = Math.floor(Date.now() / 1000 / ttl);
-    const key    = `rl:${tenant.id}:${window}`;
-
-    const current = await this.redis.incr(key);
-    if (current === 1) {
-      await this.redis.expire(key, ttl + 5);
-    }
-
-    if (current > limit) {
-      throw new ThrottlerException();
     }
 
     return true;
@@ -1807,19 +1735,21 @@ export class AuthController {
 }
 ```
 
-## File: src/modules/auth/auth.module.ts
-```typescript
+## File: src/modules/auth/auth.module.ts.bak2
+```
 // src/modules/auth/auth.module.ts
 import { Module } from '@nestjs/common';
-import { AuthController } from './auth.controller';
-import { FirebaseModule } from '../firebase/firebase.module';
+import { AuthController }      from './auth.controller';
+import { FirebaseModule }      from '../firebase/firebase.module';
 import { FirebaseAuthService } from '../firebase/firebase-auth.service';
+import { TenantsModule }       from '../tenants/tenants.module';
+import { AuthGuard }           from '../../common/guards/auth.guard';
 
 @Module({
-  imports:     [FirebaseModule],
+  imports:     [FirebaseModule, TenantsModule],
   controllers: [AuthController],
-  providers:   [FirebaseAuthService],
-  exports:     [FirebaseAuthService],
+  providers:   [FirebaseAuthService, AuthGuard],
+  exports:     [FirebaseAuthService, AuthGuard],
 })
 export class AuthModule {}
 ```
@@ -2366,34 +2296,6 @@ export class PaymentsController {
     return this.payments.refund(id, body, ctx);
   }
 }
-```
-
-## File: src/modules/payments/payments.module.ts
-```typescript
-// src/modules/payments/payments.module.ts
-import { BullModule } from '@nestjs/bullmq';
-import { Module } from '@nestjs/common';
-import { PaymentsController } from './payments.controller';
-import { PaymentsService } from './payments.service';
-import { ReconciliationService } from './reconciliation.service';
-import { ReconcileProcessor } from './reconcile.processor';
-import { FakeModule } from '../providers/adapters/fake/fake.module';
-import { QUEUE_RECONCILE } from '../../common/constants/queues';
-
-@Module({
-  imports: [
-    FakeModule,
-    BullModule.registerQueue({ name: QUEUE_RECONCILE }),
-  ],
-  controllers: [PaymentsController],
-  providers: [
-    PaymentsService,
-    ReconciliationService,
-    ReconcileProcessor,
-  ],
-  exports: [PaymentsService],
-})
-export class PaymentsModule {}
 ```
 
 ## File: src/modules/payments/payments.service.ts
@@ -5362,29 +5264,6 @@ export class WebhooksController {
 }
 ```
 
-## File: src/modules/webhooks/webhooks.module.ts
-```typescript
-import { BullModule } from '@nestjs/bullmq';
-import { Module } from '@nestjs/common';
-import { WebhooksController } from './webhooks.controller';
-import { WebhookProcessor } from './webhook.processor';
-import { WebhookSecretService } from './webhook-secret.service';
-import { QUEUE_WEBHOOKS } from '../../common/constants/queues';
-
-@Module({
-  imports: [
-    BullModule.registerQueue({ name: QUEUE_WEBHOOKS }),
-  ],
-  controllers: [WebhooksController],
-  providers: [
-    WebhookProcessor,
-    WebhookSecretService,
-  ],
-  exports: [WebhookSecretService],
-})
-export class WebhooksModule {}
-```
-
 ## File: src/app.module.ts
 ```typescript
 // src/app.module.ts
@@ -5916,6 +5795,176 @@ model AuditLog {
 }
 ```
 
+## File: src/common/constants/queues.ts
+```typescript
+// src/common/constants/queues.ts
+//
+// IMPORTANTE: BullMQ 5.x reserva ":" para prefijos internos de Redis.
+// Los nombres de queues NO pueden contener ":".
+// Usar guiones como separador de namespace.
+
+export const QUEUE_WEBHOOKS  = 'webhooks-process';
+export const QUEUE_RECONCILE = 'payments-reconcile';
+export const QUEUE_DLQ       = 'payments-dlq';
+
+export const JOB_PROCESS_WEBHOOK   = 'process-webhook';
+export const JOB_RECONCILE_PAYMENT = 'reconcile-payment';
+```
+
+## File: src/common/guards/tenant-throttler.guard.ts
+```typescript
+// src/common/guards/tenant-throttler.guard.ts
+import {
+  ExecutionContext,
+  Injectable,
+  Inject,
+} from '@nestjs/common';
+import {
+  ThrottlerGuard,
+  ThrottlerException,
+  ThrottlerStorage,
+} from '@nestjs/throttler';
+import { Reflector } from '@nestjs/core';
+import Redis from 'ioredis';
+import { REDIS_CLIENT } from '../../modules/redis/redis.module';
+import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
+
+/**
+ * Rate limiter por tenant usando Redis como storage.
+ *
+ * Clave:  rl:{tenantId}:{windowStart}
+ * Límite: configurable por env (THROTTLE_LIMIT_PER_TENANT, default 200 req/min)
+ *
+ * Las rutas públicas (webhooks, health) están exentas.
+ *
+ * NOTA: ThrottlerModuleOptions NO se inyecta en el constructor —
+ * ThrottlerGuard base lo resuelve internamente a través del módulo.
+ * Inyectarlo explícitamente rompe el DI container en NestJS 11.
+ */
+@Injectable()
+export class TenantThrottlerGuard extends ThrottlerGuard {
+  constructor(
+    @Inject(REDIS_CLIENT) private readonly redis: Redis,
+    storageService: ThrottlerStorage,
+    reflector: Reflector,
+  ) {
+    super({} as any, storageService, reflector);
+  }
+
+  override async canActivate(context: ExecutionContext): Promise<boolean> {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (isPublic) return true;
+
+    const req    = context.switchToHttp().getRequest<Record<string, any>>();
+    const tenant = req['tenant'] as { id: string } | undefined;
+
+    // Sin tenant resuelto: dejar pasar (AuthGuard ya lo validó)
+    if (!tenant) return super.canActivate(context);
+
+    const ttl    = Number(process.env['THROTTLE_TTL']               ?? 60);
+    const limit  = Number(process.env['THROTTLE_LIMIT_PER_TENANT']  ?? process.env['THROTTLE_LIMIT'] ?? 200);
+    const window = Math.floor(Date.now() / 1000 / ttl);
+    const key    = `rl:${tenant.id}:${window}`;
+
+    const current = await this.redis.incr(key);
+    if (current === 1) {
+      await this.redis.expire(key, ttl + 5);
+    }
+
+    if (current > limit) {
+      throw new ThrottlerException();
+    }
+
+    return true;
+  }
+
+  // Tracker fallback para rutas sin tenant (usa IP o proyecto)
+  protected override async getTracker(req: Record<string, any>): Promise<string> {
+    const projectId      = req.headers?.['x-project-id']      as string | undefined;
+    const organizationId = req.headers?.['x-organization-id'] as string | undefined;
+
+    if (projectId)      return `proj:${projectId}`;
+    if (organizationId) return `org:${organizationId}`;
+
+    return (req.ip as string | undefined) ?? req.connection?.remoteAddress ?? 'unknown';
+  }
+}
+```
+
+## File: src/common/shared-guards.module.ts
+```typescript
+// src/common/shared-guards.module.ts
+//
+// Importado por módulos de feature que usan guards con @UseGuards().
+// Centraliza todas las dependencias que los guards necesitan.
+import { Module }              from '@nestjs/common';
+import { FirebaseModule }      from '../modules/firebase/firebase.module';
+import { TenantsModule }       from '../modules/tenants/tenants.module';
+import { FirebaseAuthService } from '../modules/firebase/firebase-auth.service';
+import { AuthGuard }           from './guards/auth.guard';
+import { TenantGuard }         from './guards/tenant.guard';
+import { ApiKeyGuard }         from './guards/api-key.guard';
+import { RolesGuard }          from './guards/roles.guard';
+import { WriteGuard }          from './guards/write.guard';
+import { PciGuard }            from './guards/pci.guard';
+
+@Module({
+  imports:  [FirebaseModule, TenantsModule],
+  providers: [
+    FirebaseAuthService,
+    AuthGuard,
+    TenantGuard,
+    ApiKeyGuard,
+    RolesGuard,
+    WriteGuard,
+    PciGuard,
+  ],
+  exports: [
+    FirebaseAuthService,
+    AuthGuard,
+    TenantGuard,
+    ApiKeyGuard,
+    RolesGuard,
+    WriteGuard,
+    PciGuard,
+  ],
+})
+export class SharedGuardsModule {}
+```
+
+## File: src/modules/payments/payments.module.ts
+```typescript
+// src/modules/payments/payments.module.ts
+import { BullModule }          from '@nestjs/bullmq';
+import { Module }              from '@nestjs/common';
+import { PaymentsController }  from './payments.controller';
+import { PaymentsService }     from './payments.service';
+import { ReconciliationService } from './reconciliation.service';
+import { ReconcileProcessor }  from './reconcile.processor';
+import { FakeModule }          from '../providers/adapters/fake/fake.module';
+import { SharedGuardsModule }  from '../../common/shared-guards.module';
+import { QUEUE_RECONCILE }     from '../../common/constants/queues';
+
+@Module({
+  imports: [
+    FakeModule,
+    SharedGuardsModule,
+    BullModule.registerQueue({ name: QUEUE_RECONCILE }),
+  ],
+  controllers: [PaymentsController],
+  providers: [
+    PaymentsService,
+    ReconciliationService,
+    ReconcileProcessor,
+  ],
+  exports: [PaymentsService],
+})
+export class PaymentsModule {}
+```
+
 ## File: src/modules/prisma/prisma.service.ts
 ```typescript
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
@@ -5954,6 +6003,55 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     await this.$disconnect();
   }
 }
+```
+
+## File: src/modules/webhooks/webhooks.module.ts
+```typescript
+// src/modules/webhooks/webhooks.module.ts
+import { BullModule }         from '@nestjs/bullmq';
+import { Module }             from '@nestjs/common';
+import { WebhooksController } from './webhooks.controller';
+import { WebhookProcessor }   from './webhook.processor';
+import { WebhookSecretService } from './webhook-secret.service';
+import { SharedGuardsModule } from '../../common/shared-guards.module';
+import { QUEUE_WEBHOOKS }     from '../../common/constants/queues';
+
+@Module({
+  imports: [
+    SharedGuardsModule,
+    BullModule.registerQueue({ name: QUEUE_WEBHOOKS }),
+  ],
+  controllers: [WebhooksController],
+  providers: [
+    WebhookProcessor,
+    WebhookSecretService,
+  ],
+  exports: [WebhookSecretService],
+})
+export class WebhooksModule {}
+```
+
+## File: src/modules/auth/auth.module.ts
+```typescript
+// src/modules/auth/auth.module.ts
+//
+// Módulo base de autenticación. Provee FirebaseAuthService.
+// NO importa SharedGuardsModule — es quien alimenta a SharedGuardsModule.
+// Dependencias directas: FirebaseModule (Firebase Admin) + TenantsModule (ApiKeyService).
+import { Module }              from '@nestjs/common';
+import { AuthController }      from './auth.controller';
+import { FirebaseModule }      from '../firebase/firebase.module';
+import { TenantsModule }       from '../tenants/tenants.module';
+import { FirebaseAuthService } from '../firebase/firebase-auth.service';
+import { AuthGuard }           from '../../common/guards/auth.guard';
+
+@Module({
+  imports:     [FirebaseModule, TenantsModule],
+  controllers: [AuthController],
+  providers:   [FirebaseAuthService, AuthGuard],
+  exports:     [FirebaseAuthService, AuthGuard],
+})
+export class AuthModule {}
 ```
 
 ## File: package.json
