@@ -394,248 +394,6 @@ ALTER TABLE "Refund" ADD CONSTRAINT "Refund_paymentId_fkey" FOREIGN KEY ("paymen
 provider = "postgresql"
 ```
 
-## File: prisma/schema.prisma
-```prisma
-// =============================================================================
-// prisma/schema.prisma — Sprint 8: organizationId SSO
-// =============================================================================
-// PASOS:
-//   1. Reemplazar este archivo en tu repo
-//   2. pnpm prisma migrate dev --name sprint8_organization_id
-//   3. pnpm prisma generate
-// =============================================================================
-
-generator client {
-  provider = "prisma-client-js"
-}
-
-datasource db {
-  provider = "postgresql"
-}
-
-// ============================================================================
-// TENANCY — se mantiene para compatibilidad B2B (x-api-key)
-// En el ecosistema SSO: id de Tenant === organizationId del owner-dashboard
-// ============================================================================
-
-model Tenant {
-  id         String   @id @default(cuid())
-  name       String
-  apiKeyHash String   @unique  // legacy sprint 1 — mantener para compatibilidad B2B
-  active     Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  payments  Payment[]
-  customers Customer[]
-  apiKeys   TenantApiKey[]
-
-  // NOTA: El modelo User fue eliminado — el owner-dashboard gestiona los usuarios.
-  // Los sprints 7 (User local) quedan deprecados.
-
-  @@index([active])
-}
-
-// ============================================================================
-// API KEYS POR TENANT (Sprint 6) — se mantienen para flows B2B
-// ============================================================================
-
-model TenantApiKey {
-  id         String    @id @default(cuid())
-  tenantId   String
-  label      String
-  keyHash    String    // bcrypt — nunca la key cruda
-  prefix     String    // primeros 8 chars para búsqueda rápida
-  active     Boolean   @default(true)
-  expiresAt  DateTime?
-  revokedAt  DateTime?
-  lastUsedAt DateTime?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  @@index([prefix, active])
-  @@index([tenantId])
-}
-
-// ============================================================================
-// CUSTOMERS — ahora con organizationId para filtrado SSO
-// ============================================================================
-
-model Customer {
-  id             String   @id @default(cuid())
-  tenantId       String   // FK legacy → Tenant (mantenida para compatibilidad)
-  organizationId String   // UUID del org en owner-dashboard = tenantId en esta pasarela
-  externalId     String
-  email          String?  // cifrado at-rest (PII)
-  country        String?
-  createdAt      DateTime @default(now())
-
-  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  payments Payment[]
-
-  @@unique([tenantId, externalId])
-  @@index([email])
-  @@index([organizationId])
-}
-
-// ============================================================================
-// ENUMS
-// ============================================================================
-
-enum PaymentStatus {
-  PENDING
-  AUTHORIZED
-  CAPTURED
-  FAILED
-  CANCELLED
-  REFUNDED
-  PARTIALLY_REFUNDED
-}
-
-enum PaymentMethodKind {
-  CARD
-  WALLET
-  BANK_TRANSFER
-  CASH_VOUCHER
-  PIX
-  QR
-}
-
-// ============================================================================
-// PAYMENTS — ahora con organizationId para filtrado SSO
-// ============================================================================
-
-model Payment {
-  id             String            @id @default(cuid())
-  tenantId       String            // FK legacy → Tenant
-  organizationId String            // UUID del org en owner-dashboard
-  customerId     String?
-  idempotencyKey String
-  amountMinor    BigInt
-  currency       String
-  country        String
-  method         PaymentMethodKind
-  status         PaymentStatus     @default(PENDING)
-  providerId     String
-  externalId     String?
-  description    String?
-  metadata       Json?
-  failureCode    String?
-  failureMessage String?
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
-
-  tenant   Tenant         @relation(fields: [tenantId], references: [id])
-  customer Customer?      @relation(fields: [customerId], references: [id])
-  events   PaymentEvent[]
-  refunds  Refund[]
-  @@unique([tenantId, idempotencyKey])
-  @@index([tenantId, status, createdAt])
-  @@index([organizationId, status, createdAt])  // SSO: filtro principal
-  @@index([providerId, externalId])
-}
-
-// ============================================================================
-// PAYMENT EVENTS (audit log append-only)
-// ============================================================================
-
-model PaymentEvent {
-  id        String   @id @default(cuid())
-  paymentId String
-  type      String
-  payload   Json
-  createdAt DateTime @default(now())
-
-  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
-
-  @@index([paymentId, createdAt])
-}
-
-// ============================================================================
-// REFUNDS
-// ============================================================================
-
-model Refund {
-  id               String   @id @default(cuid())
-  paymentId        String
-  amountMinor      BigInt
-  reason           String?
-  externalRefundId String?
-  status           String
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  payment Payment @relation(fields: [paymentId], references: [id])
-
-  @@index([paymentId])
-}
-
-// ============================================================================
-// WEBHOOK INBOUND
-// Los webhooks llegan del provider (cross-tenant por naturaleza)
-// organizationId se resuelve al procesar, no al recibir
-// ============================================================================
-
-model WebhookInbound {
-  id          String    @id @default(cuid())
-  providerId  String
-  externalId  String
-  signature   String?
-  headers     Json
-  body        Json
-  processedAt DateTime?
-  status      String    @default("received")
-  attempts    Int       @default(0)
-  lastError   String?
-  createdAt   DateTime  @default(now())
-
-  @@unique([providerId, externalId])
-  @@index([status, createdAt])
-}
-
-// ============================================================================
-// PROVIDER ROUTES
-// ============================================================================
-
-model ProviderRoute {
-  id         String            @id @default(cuid())
-  country    String
-  currency   String
-  method     PaymentMethodKind
-  providerId String
-  priority   Int               @default(0)
-  active     Boolean           @default(true)
-
-  @@unique([country, currency, method, providerId])
-  @@index([country, currency, method, active, priority])
-}
-
-// ============================================================================
-// AUDIT LOG INMUTABLE (append-only) — ahora con organizationId
-// ============================================================================
-
-model AuditLog {
-  id             String   @id @default(cuid())
-  tenantId       String   // FK legacy
-  organizationId String?  // UUID del org en owner-dashboard
-  actorId        String?  // firebaseUid del usuario o 'api-key'
-  action         String
-  resourceId     String
-  resourceType   String
-  before         Json?
-  after          Json?
-  metadata       Json?
-  ip             String?
-  createdAt      DateTime @default(now())
-
-  @@index([tenantId, createdAt])
-  @@index([organizationId, createdAt])  // SSO: filtro principal
-  @@index([resourceId])
-}
-```
-
 ## File: prisma/seed.ts
 ```typescript
 import { PrismaClient, PaymentMethodKind } from '@prisma/client';
@@ -3207,22 +2965,6 @@ import { PrismaService } from './prisma.service';
   exports: [PrismaService],
 })
 export class PrismaModule {}
-```
-
-## File: src/modules/prisma/prisma.service.ts
-```typescript
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
-
-@Injectable()
-export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
-  async onModuleInit() {
-    await this.$connect();
-  }
-  async onModuleDestroy() {
-    await this.$disconnect();
-  }
-}
 ```
 
 ## File: src/modules/providers/adapters/conekta/conekta-error.mapper.ts
@@ -5931,6 +5673,289 @@ void bootstrap();
 }
 ```
 
+## File: prisma/schema.prisma
+```prisma
+// =============================================================================
+// prisma/schema.prisma — Sprint 8: organizationId SSO
+// =============================================================================
+// PASOS:
+//   1. Reemplazar este archivo en tu repo
+//   2. pnpm prisma migrate dev --name sprint8_organization_id
+//   3. pnpm prisma generate
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+  engineType = "client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================================
+// TENANCY — se mantiene para compatibilidad B2B (x-api-key)
+// En el ecosistema SSO: id de Tenant === organizationId del owner-dashboard
+// ============================================================================
+
+model Tenant {
+  id         String   @id @default(cuid())
+  name       String
+  apiKeyHash String   @unique  // legacy sprint 1 — mantener para compatibilidad B2B
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  payments  Payment[]
+  customers Customer[]
+  apiKeys   TenantApiKey[]
+
+  // NOTA: El modelo User fue eliminado — el owner-dashboard gestiona los usuarios.
+  // Los sprints 7 (User local) quedan deprecados.
+
+  @@index([active])
+}
+
+// ============================================================================
+// API KEYS POR TENANT (Sprint 6) — se mantienen para flows B2B
+// ============================================================================
+
+model TenantApiKey {
+  id         String    @id @default(cuid())
+  tenantId   String
+  label      String
+  keyHash    String    // bcrypt — nunca la key cruda
+  prefix     String    // primeros 8 chars para búsqueda rápida
+  active     Boolean   @default(true)
+  expiresAt  DateTime?
+  revokedAt  DateTime?
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([prefix, active])
+  @@index([tenantId])
+}
+
+// ============================================================================
+// CUSTOMERS — ahora con organizationId para filtrado SSO
+// ============================================================================
+
+model Customer {
+  id             String   @id @default(cuid())
+  tenantId       String   // FK legacy → Tenant (mantenida para compatibilidad)
+  organizationId String   // UUID del org en owner-dashboard = tenantId en esta pasarela
+  externalId     String
+  email          String?  // cifrado at-rest (PII)
+  country        String?
+  createdAt      DateTime @default(now())
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  payments Payment[]
+
+  @@unique([tenantId, externalId])
+  @@index([email])
+  @@index([organizationId])
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  CAPTURED
+  FAILED
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum PaymentMethodKind {
+  CARD
+  WALLET
+  BANK_TRANSFER
+  CASH_VOUCHER
+  PIX
+  QR
+}
+
+// ============================================================================
+// PAYMENTS — ahora con organizationId para filtrado SSO
+// ============================================================================
+
+model Payment {
+  id             String            @id @default(cuid())
+  tenantId       String            // FK legacy → Tenant
+  organizationId String            // UUID del org en owner-dashboard
+  customerId     String?
+  idempotencyKey String
+  amountMinor    BigInt
+  currency       String
+  country        String
+  method         PaymentMethodKind
+  status         PaymentStatus     @default(PENDING)
+  providerId     String
+  externalId     String?
+  description    String?
+  metadata       Json?
+  failureCode    String?
+  failureMessage String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  tenant   Tenant         @relation(fields: [tenantId], references: [id])
+  customer Customer?      @relation(fields: [customerId], references: [id])
+  events   PaymentEvent[]
+  refunds  Refund[]
+  @@unique([tenantId, idempotencyKey])
+  @@index([tenantId, status, createdAt])
+  @@index([organizationId, status, createdAt])  // SSO: filtro principal
+  @@index([providerId, externalId])
+}
+
+// ============================================================================
+// PAYMENT EVENTS (audit log append-only)
+// ============================================================================
+
+model PaymentEvent {
+  id        String   @id @default(cuid())
+  paymentId String
+  type      String
+  payload   Json
+  createdAt DateTime @default(now())
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@index([paymentId, createdAt])
+}
+
+// ============================================================================
+// REFUNDS
+// ============================================================================
+
+model Refund {
+  id               String   @id @default(cuid())
+  paymentId        String
+  amountMinor      BigInt
+  reason           String?
+  externalRefundId String?
+  status           String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  payment Payment @relation(fields: [paymentId], references: [id])
+
+  @@index([paymentId])
+}
+
+// ============================================================================
+// WEBHOOK INBOUND
+// Los webhooks llegan del provider (cross-tenant por naturaleza)
+// organizationId se resuelve al procesar, no al recibir
+// ============================================================================
+
+model WebhookInbound {
+  id          String    @id @default(cuid())
+  providerId  String
+  externalId  String
+  signature   String?
+  headers     Json
+  body        Json
+  processedAt DateTime?
+  status      String    @default("received")
+  attempts    Int       @default(0)
+  lastError   String?
+  createdAt   DateTime  @default(now())
+
+  @@unique([providerId, externalId])
+  @@index([status, createdAt])
+}
+
+// ============================================================================
+// PROVIDER ROUTES
+// ============================================================================
+
+model ProviderRoute {
+  id         String            @id @default(cuid())
+  country    String
+  currency   String
+  method     PaymentMethodKind
+  providerId String
+  priority   Int               @default(0)
+  active     Boolean           @default(true)
+
+  @@unique([country, currency, method, providerId])
+  @@index([country, currency, method, active, priority])
+}
+
+// ============================================================================
+// AUDIT LOG INMUTABLE (append-only) — ahora con organizationId
+// ============================================================================
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  tenantId       String   // FK legacy
+  organizationId String?  // UUID del org en owner-dashboard
+  actorId        String?  // firebaseUid del usuario o 'api-key'
+  action         String
+  resourceId     String
+  resourceType   String
+  before         Json?
+  after          Json?
+  metadata       Json?
+  ip             String?
+  createdAt      DateTime @default(now())
+
+  @@index([tenantId, createdAt])
+  @@index([organizationId, createdAt])  // SSO: filtro principal
+  @@index([resourceId])
+}
+```
+
+## File: src/modules/prisma/prisma.service.ts
+```typescript
+import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+// Importa el adaptador de PostgreSQL
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '@prisma/client';
+// Importa el driver pg (node-postgres)
+import * as pg from 'pg';
+
+@Injectable()
+export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
+
+  constructor() {
+    // Asegúrate de que DATABASE_URL esté disponible en tu archivo .env
+    const connectionString = process.env.DATABASE_URL;
+
+    // Crea una instancia del Pool de conexión del driver
+    const pool = new pg.Pool({ connectionString });
+
+    // Crea una instancia del adaptador de Prisma
+    const adapter = new PrismaPg(pool);
+
+    // Pasa el adaptador al constructor de PrismaClient
+    super({
+      adapter: adapter,
+      // Puedes añadir tus logs aquí si es necesario:
+      // log: ['query', 'error', 'warn'],
+    });
+  }
+
+  async onModuleInit() {
+    await this.$connect();
+  }
+
+  async onModuleDestroy() {
+    await this.$disconnect();
+  }
+}
+```
+
 ## File: package.json
 ```json
 {
@@ -5981,6 +6006,7 @@ void bootstrap();
     "@opentelemetry/sdk-metrics": "^2.7.0",
     "@opentelemetry/sdk-node": "^0.215.0",
     "@opentelemetry/semantic-conventions": "^1.40.0",
+    "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.7.0",
     "argon2": "^0.44.0",
     "axios": "^1.15.0",
@@ -5999,6 +6025,7 @@ void bootstrap();
     "nanoid": "^5.1.9",
     "nestjs-pino": "^4.6.1",
     "opossum": "^9.0.0",
+    "pg": "^8.22.0",
     "pino": "^10.3.1",
     "pino-http": "^11.0.0",
     "pino-pretty": "^13.1.3",
@@ -6062,6 +6089,20 @@ void bootstrap();
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
+  },
+  "packageManager": "pnpm@10.11.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@firebase/util",
+      "@nestjs/core",
+      "@prisma/engines",
+      "@scarf/scarf",
+      "argon2",
+      "msgpackr-extract",
+      "prisma",
+      "protobufjs",
+      "unrs-resolver"
+    ]
   }
 }
 ```

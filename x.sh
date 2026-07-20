@@ -1,163 +1,117 @@
 #!/usr/bin/env bash
 # =============================================================================
-# fix-dockerfiles.sh
-# Reescribe los Dockerfiles de chat-ia-back y pasarela-pagos.
-# Ejecutar desde la raíz de cada repo:
-#   cd chat-ia-back   && bash fix-dockerfiles.sh
-#   cd pasarela-pagos && bash fix-dockerfiles.sh
+# fix-pagos-tenant-throttler.sh
+# Fix: TenantThrottlerGuard no puede resolver el argumento en índice [2]
+# Root cause: ThrottlerModuleOptions en el constructor no es inyectable por DI
+# Solución: reescribir el guard sin ese parámetro — ThrottlerGuard base
+#           lo resuelve internamente via ThrottlerModule.forRootAsync()
+# Repo: pagos-back (src en raíz)
 # =============================================================================
-
 set -euo pipefail
 
-GREEN='\033[0;32m'; CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
-ok()  { echo -e "${GREEN}✓${NC} $1"; }
-log() { echo -e "${CYAN}▶${NC} $1"; }
+FILE="src/common/guards/tenant-throttler.guard.ts"
 
-PKG_NAME=$(node -e "process.stdout.write(require('./package.json').name || '')")
+echo "🔍  Verificando $FILE ..."
 
-case "$PKG_NAME" in
-  "chat-ia-lang")
+if [ ! -f "$FILE" ]; then
+  echo "❌  No se encontró $FILE"
+  echo "    Corré el script desde la raíz del repo pagos-back"
+  exit 1
+fi
 
-log "Escribiendo Dockerfile para chat-ia-back..."
-cat > Dockerfile << 'EOF'
-# =============================================================================
-# chat-ia-back — Dockerfile
-# =============================================================================
+# Idempotencia: si ya fue corregido no tiene ThrottlerModuleOptions
+if ! grep -q "ThrottlerModuleOptions" "$FILE"; then
+  echo "⚠️  ThrottlerModuleOptions ya no está en el guard — nada que hacer"
+  exit 0
+fi
 
-# ── Stage 1: instalar dependencias ───────────────────────────────────────────
-FROM node:22-alpine AS deps
+# Backup
+cp "$FILE" "${FILE}.bak"
+echo "💾  Backup guardado en ${FILE}.bak"
 
-WORKDIR /app
+cat > "$FILE" << 'TSEOF'
+// src/common/guards/tenant-throttler.guard.ts
+import {
+  ExecutionContext,
+  Injectable,
+  Inject,
+} from '@nestjs/common';
+import {
+  ThrottlerGuard,
+  ThrottlerException,
+  ThrottlerStorage,
+} from '@nestjs/throttler';
+import { Reflector } from '@nestjs/core';
+import Redis from 'ioredis';
+import { REDIS_CLIENT } from '../../modules/redis/redis.module';
+import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
-# Fijar pnpm 10 — pnpm 11 rompe con onlyBuiltDependencies en package.json
-RUN corepack enable && corepack prepare pnpm@10.11.0 --activate
+/**
+ * Rate limiter por tenant usando Redis como storage.
+ *
+ * Clave:  rl:{tenantId}:{windowStart}
+ * Límite: configurable por env (THROTTLE_LIMIT_PER_TENANT, default 200 req/min)
+ *
+ * Las rutas públicas (webhooks, health) están exentas.
+ *
+ * NOTA: ThrottlerModuleOptions NO se inyecta en el constructor —
+ * ThrottlerGuard base lo resuelve internamente a través del módulo.
+ * Inyectarlo explícitamente rompe el DI container en NestJS 11.
+ */
+@Injectable()
+export class TenantThrottlerGuard extends ThrottlerGuard {
+  constructor(
+    @Inject(REDIS_CLIENT) private readonly redis: Redis,
+    storageService: ThrottlerStorage,
+    reflector: Reflector,
+  ) {
+    super({} as any, storageService, reflector);
+  }
 
-COPY package.json pnpm-lock.yaml ./
+  override async canActivate(context: ExecutionContext): Promise<boolean> {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (isPublic) return true;
 
-# prisma/ debe estar presente ANTES de pnpm install
-# para que el postinstall de @prisma/client pueda generar el client
-COPY prisma ./prisma
+    const req    = context.switchToHttp().getRequest<Record<string, any>>();
+    const tenant = req['tenant'] as { id: string } | undefined;
 
-RUN pnpm install --frozen-lockfile
+    // Sin tenant resuelto: dejar pasar (AuthGuard ya lo validó)
+    if (!tenant) return super.canActivate(context);
 
-# ── Stage 2: build ────────────────────────────────────────────────────────────
-FROM node:22-alpine AS builder
+    const ttl    = Number(process.env['THROTTLE_TTL']               ?? 60);
+    const limit  = Number(process.env['THROTTLE_LIMIT_PER_TENANT']  ?? process.env['THROTTLE_LIMIT'] ?? 200);
+    const window = Math.floor(Date.now() / 1000 / ttl);
+    const key    = `rl:${tenant.id}:${window}`;
 
-WORKDIR /app
+    const current = await this.redis.incr(key);
+    if (current === 1) {
+      await this.redis.expire(key, ttl + 5);
+    }
 
-RUN corepack enable && corepack prepare pnpm@10.11.0 --activate
+    if (current > limit) {
+      throw new ThrottlerException();
+    }
 
-# Traer node_modules ya instalados (con prisma client generado)
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/prisma       ./prisma
+    return true;
+  }
 
-COPY package.json pnpm-lock.yaml nest-cli.json tsconfig.json ./
-COPY src ./src
+  // Tracker fallback para rutas sin tenant (usa IP o proyecto)
+  protected override async getTracker(req: Record<string, any>): Promise<string> {
+    const projectId      = req.headers?.['x-project-id']      as string | undefined;
+    const organizationId = req.headers?.['x-organization-id'] as string | undefined;
 
-# Generar prisma client explícitamente (defensa en profundidad)
-RUN npx prisma generate
+    if (projectId)      return `proj:${projectId}`;
+    if (organizationId) return `org:${organizationId}`;
 
-# Compilar TypeScript
-RUN pnpm build
+    return (req.ip as string | undefined) ?? req.connection?.remoteAddress ?? 'unknown';
+  }
+}
+TSEOF
 
-# ── Stage 3: producción ───────────────────────────────────────────────────────
-FROM node:22-alpine AS runner
-
-WORKDIR /app
-
-ENV NODE_ENV=production
-
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-
-# Copiar node_modules del BUILDER (antes de cualquier prune)
-# NO usar pnpm prune --prod: elimina @prisma/client-runtime-utils
-# que es dependencia interna de Prisma 7 y rompe en runtime
-COPY --from=builder --chown=appuser:appgroup /app/node_modules ./node_modules
-COPY --from=builder --chown=appuser:appgroup /app/dist         ./dist
-COPY --from=builder --chown=appuser:appgroup /app/prisma       ./prisma
-COPY --chown=appuser:appgroup package.json ./
-
-USER appuser
-
-EXPOSE 3000
-
-HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-  CMD wget -qO- http://localhost:3000/api/v1/health || exit 1
-
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main"]
-EOF
-
-ok "Dockerfile chat-ia-back listo"
-;;
-
-  "pasarela-pagos")
-
-log "Escribiendo Dockerfile para pasarela-pagos..."
-cat > Dockerfile << 'EOF'
-# =============================================================================
-# pasarela-pagos — Dockerfile
-# =============================================================================
-
-# ── Stage 1: instalar dependencias ───────────────────────────────────────────
-FROM node:22-alpine AS deps
-
-WORKDIR /app
-
-RUN corepack enable && corepack prepare pnpm@10.11.0 --activate
-
-COPY package.json pnpm-lock.yaml ./
-
-COPY prisma ./prisma
-
-RUN pnpm install --frozen-lockfile
-
-# ── Stage 2: build ────────────────────────────────────────────────────────────
-FROM node:22-alpine AS builder
-
-WORKDIR /app
-
-RUN corepack enable && corepack prepare pnpm@10.11.0 --activate
-
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/prisma       ./prisma
-
-COPY package.json pnpm-lock.yaml nest-cli.json tsconfig.json ./
-COPY src ./src
-
-RUN npx prisma generate
-
-RUN pnpm build
-
-# ── Stage 3: producción ───────────────────────────────────────────────────────
-FROM node:22-alpine AS runner
-
-WORKDIR /app
-
-ENV NODE_ENV=production
-
-RUN addgroup -S app && adduser -S app -G app
-
-COPY --from=builder --chown=app:app /app/node_modules ./node_modules
-COPY --from=builder --chown=app:app /app/dist         ./dist
-COPY --from=builder --chown=app:app /app/prisma       ./prisma
-COPY --chown=app:app package.json ./
-
-USER app
-
-EXPOSE 3000
-
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main.js"]
-EOF
-
-ok "Dockerfile pasarela-pagos listo"
-;;
-
-  *)
-    echo "Repo no reconocido: '$PKG_NAME'. Esperado: chat-ia-lang o pasarela-pagos"
-    exit 1
-    ;;
-esac
-
+echo "✅  tenant-throttler.guard.ts actualizado"
 echo ""
-echo -e "${BOLD}Commitear:${NC}"
-echo -e "  ${CYAN}git add Dockerfile && git commit -m 'fix: Dockerfile pnpm 10 + no prune + prisma generate' && git push${NC}"
+echo "📄  Contenido final:"
+cat "$FILE"
