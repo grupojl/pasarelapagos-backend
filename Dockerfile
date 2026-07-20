@@ -6,7 +6,7 @@ RUN corepack enable && corepack prepare pnpm@10.11.0 --activate
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 COPY prisma ./prisma
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --shamefully-hoist
 
 # Stage 2: builder
 FROM node:22-alpine AS builder
