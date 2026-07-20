@@ -51,4 +51,4 @@ USER app
 
 EXPOSE 3000
 
-CMD ["dumb-init", "node", "dist/src/main"]
+CMD ["dist/src/main"]
