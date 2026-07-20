@@ -1,106 +1,86 @@
 #!/usr/bin/env bash
 # =============================================================================
-# fix-pagos-final.sh
-# Fix definitivo: NestJS resuelve guards de @UseGuards() como injectables
-# del módulo que contiene el controller — no del módulo global.
-# PaymentsModule necesita tener acceso a ApiKeyService via TenantsModule.
-# Solución: PaymentsModule importa TenantsModule + FirebaseModule directamente.
-# No depende de @Global() para la resolución de injectables de guards.
+# fix-pagos-throttler-guard-v2.sh
+# Fix: TenantThrottlerGuard.onModuleInit falla porque super({} as any, ...)
+# deja this.options undefined → el onModuleInit de ThrottlerGuard base
+# llama .sort() sobre undefined.
+#
+# Solución: en lugar de extender ThrottlerGuard (que requiere options en super),
+# implementar CanActivate directamente. La lógica de rate limit por tenant
+# ya estaba 100% en Redis — no usamos nada de ThrottlerGuard base.
 # =============================================================================
 set -euo pipefail
 
-if [ ! -f "src/modules/payments/payments.module.ts" ]; then
-  echo "❌  Corré desde la raíz del repo pagos-back"
+FILE="src/common/guards/tenant-throttler.guard.ts"
+
+if [ ! -f "$FILE" ]; then
+  echo "❌  No se encontró $FILE — corré desde la raíz del repo pagos-back"
   exit 1
 fi
 
-echo "🔧  Actualizando payments.module.ts..."
-cat > src/modules/payments/payments.module.ts << 'TSEOF'
-import { BullModule }            from '@nestjs/bullmq';
-import { Module }                from '@nestjs/common';
-import { PaymentsController }    from './payments.controller';
-import { PaymentsService }       from './payments.service';
-import { ReconciliationService } from './reconciliation.service';
-import { ReconcileProcessor }    from './reconcile.processor';
-import { FakeModule }            from '../providers/adapters/fake/fake.module';
-import { FirebaseModule }        from '../firebase/firebase.module';
-import { TenantsModule }         from '../tenants/tenants.module';
-import { FirebaseAuthService }   from '../firebase/firebase-auth.service';
-import { AuthGuard }             from '../../common/guards/auth.guard';
-import { TenantGuard }           from '../../common/guards/tenant.guard';
-import { ApiKeyGuard }           from '../../common/guards/api-key.guard';
-import { RolesGuard }            from '../../common/guards/roles.guard';
-import { WriteGuard }            from '../../common/guards/write.guard';
-import { PciGuard }              from '../../common/guards/pci.guard';
-import { QUEUE_RECONCILE }       from '../../common/constants/queues';
+cp "$FILE" "${FILE}.bak"
+echo "💾  Backup en ${FILE}.bak"
 
-@Module({
-  imports: [
-    FakeModule,
-    FirebaseModule,
-    TenantsModule,
-    BullModule.registerQueue({ name: QUEUE_RECONCILE }),
-  ],
-  controllers: [PaymentsController],
-  providers: [
-    PaymentsService,
-    ReconciliationService,
-    ReconcileProcessor,
-    FirebaseAuthService,
-    AuthGuard,
-    TenantGuard,
-    ApiKeyGuard,
-    RolesGuard,
-    WriteGuard,
-    PciGuard,
-  ],
-  exports: [PaymentsService],
-})
-export class PaymentsModule {}
+cat > "$FILE" << 'TSEOF'
+// src/common/guards/tenant-throttler.guard.ts
+//
+// Rate limiter por tenant usando Redis directamente.
+// Ya NO extiende ThrottlerGuard — esa clase requiere inyectar ThrottlerModuleOptions
+// en el constructor y ejecuta onModuleInit() que falla con opciones vacías.
+// La lógica de rate limit es 100% propia via Redis, sin dependencia de ThrottlerGuard.
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Inject,
+} from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { ThrottlerException } from '@nestjs/throttler';
+import Redis from 'ioredis';
+import { REDIS_CLIENT } from '../../modules/redis/redis.module';
+import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
+
+@Injectable()
+export class TenantThrottlerGuard implements CanActivate {
+  constructor(
+    @Inject(REDIS_CLIENT) private readonly redis: Redis,
+    private readonly reflector: Reflector,
+  ) {}
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    // Rutas públicas exentas
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (isPublic) return true;
+
+    const req    = context.switchToHttp().getRequest<Record<string, any>>();
+    const tenant = req['tenant'] as { id: string } | undefined;
+
+    // Sin tenant resuelto aún (AuthGuard corre antes) → dejar pasar
+    if (!tenant?.id) return true;
+
+    const ttl    = Number(process.env['THROTTLE_TTL']              ?? 60);
+    const limit  = Number(process.env['THROTTLE_LIMIT_PER_TENANT'] ?? process.env['THROTTLE_LIMIT'] ?? 200);
+    const window = Math.floor(Date.now() / 1000 / ttl);
+    const key    = `rl:${tenant.id}:${window}`;
+
+    const current = await this.redis.incr(key);
+    if (current === 1) {
+      await this.redis.expire(key, ttl + 5);
+    }
+
+    if (current > limit) {
+      throw new ThrottlerException();
+    }
+
+    return true;
+  }
+}
 TSEOF
-echo "✅  payments.module.ts"
 
-echo "🔧  Actualizando webhooks.module.ts..."
-cat > src/modules/webhooks/webhooks.module.ts << 'TSEOF'
-import { BullModule }           from '@nestjs/bullmq';
-import { Module }               from '@nestjs/common';
-import { WebhooksController }   from './webhooks.controller';
-import { WebhookProcessor }     from './webhook.processor';
-import { WebhookSecretService } from './webhook-secret.service';
-import { FirebaseModule }       from '../firebase/firebase.module';
-import { TenantsModule }        from '../tenants/tenants.module';
-import { FirebaseAuthService }  from '../firebase/firebase-auth.service';
-import { AuthGuard }            from '../../common/guards/auth.guard';
-import { TenantGuard }          from '../../common/guards/tenant.guard';
-import { ApiKeyGuard }          from '../../common/guards/api-key.guard';
-import { RolesGuard }           from '../../common/guards/roles.guard';
-import { QUEUE_WEBHOOKS }       from '../../common/constants/queues';
-
-@Module({
-  imports: [
-    FirebaseModule,
-    TenantsModule,
-    BullModule.registerQueue({ name: QUEUE_WEBHOOKS }),
-  ],
-  controllers: [WebhooksController],
-  providers: [
-    WebhookProcessor,
-    WebhookSecretService,
-    FirebaseAuthService,
-    AuthGuard,
-    TenantGuard,
-    ApiKeyGuard,
-    RolesGuard,
-  ],
-  exports: [WebhookSecretService],
-})
-export class WebhooksModule {}
-TSEOF
-echo "✅  webhooks.module.ts"
-
+echo "✅  tenant-throttler.guard.ts reescrito (CanActivate directo, sin ThrottlerGuard base)"
 echo ""
-echo "📄  payments.module.ts final:"
-cat src/modules/payments/payments.module.ts
-echo ""
-echo "📄  webhooks.module.ts final:"
-cat src/modules/webhooks/webhooks.module.ts
+echo "📄  Resultado:"
+cat "$FILE"
