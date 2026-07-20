@@ -1,135 +1,163 @@
 #!/usr/bin/env bash
 # =============================================================================
-# fix-railway-final.sh
-#
-# Solución definitiva para ambos repos.
-#
-# CAUSA RAÍZ (después de analizar los XMLs):
-#   Ningún package.json tiene "packageManager" definido.
-#   → Corepack descarga pnpm@latest = pnpm 11
-#   → pnpm 11 ignora package.json["pnpm"] Y requiere pnpm-workspace.yaml
-#   → el pnpm-workspace.yaml generado localmente no se committea con
-#     el lockfile correcto → Railway sigue fallando
-#
-# FIX:
-#   1. Fijar "packageManager": "pnpm@10.11.0" en package.json
-#      → Corepack usa exactamente esa versión (no pnpm 11)
-#      → pnpm 10 SÍ lee package.json["pnpm"].onlyBuiltDependencies
-#   2. Agregar pnpm.onlyBuiltDependencies con la lista exacta del error
-#   3. Regenerar lockfile con pnpm 10
-#   4. Borrar pnpm-workspace.yaml si existe (no lo necesitamos más)
-#
-# USO:
-#   cd chat-ia-back   && bash fix-railway-final.sh
-#   cd pasarela-pagos && bash fix-railway-final.sh
+# fix-dockerfiles.sh
+# Reescribe los Dockerfiles de chat-ia-back y pasarela-pagos.
+# Ejecutar desde la raíz de cada repo:
+#   cd chat-ia-back   && bash fix-dockerfiles.sh
+#   cd pasarela-pagos && bash fix-dockerfiles.sh
 # =============================================================================
 
 set -euo pipefail
 
-GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
-log()  { echo -e "${CYAN}▶${NC} $1"; }
-ok()   { echo -e "${GREEN}✓${NC} $1"; }
-warn() { echo -e "${YELLOW}⚠${NC}  $1"; }
-fail() { echo -e "${RED}✗${NC} $1"; exit 1; }
-
-[ -f "package.json" ] || fail "No se encontró package.json"
+GREEN='\033[0;32m'; CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
+ok()  { echo -e "${GREEN}✓${NC} $1"; }
+log() { echo -e "${CYAN}▶${NC} $1"; }
 
 PKG_NAME=$(node -e "process.stdout.write(require('./package.json').name || '')")
 
 case "$PKG_NAME" in
   "chat-ia-lang")
-    LABEL="chat-ia-back"
-    BUILT_DEPS='["@firebase/util","@nestjs/core","@prisma/engines","@scarf/scarf","bcrypt","msgpackr-extract","prisma","protobufjs","unrs-resolver"]'
-    ;;
+
+log "Escribiendo Dockerfile para chat-ia-back..."
+cat > Dockerfile << 'EOF'
+# =============================================================================
+# chat-ia-back — Dockerfile
+# =============================================================================
+
+# ── Stage 1: instalar dependencias ───────────────────────────────────────────
+FROM node:22-alpine AS deps
+
+WORKDIR /app
+
+# Fijar pnpm 10 — pnpm 11 rompe con onlyBuiltDependencies en package.json
+RUN corepack enable && corepack prepare pnpm@10.11.0 --activate
+
+COPY package.json pnpm-lock.yaml ./
+
+# prisma/ debe estar presente ANTES de pnpm install
+# para que el postinstall de @prisma/client pueda generar el client
+COPY prisma ./prisma
+
+RUN pnpm install --frozen-lockfile
+
+# ── Stage 2: build ────────────────────────────────────────────────────────────
+FROM node:22-alpine AS builder
+
+WORKDIR /app
+
+RUN corepack enable && corepack prepare pnpm@10.11.0 --activate
+
+# Traer node_modules ya instalados (con prisma client generado)
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/prisma       ./prisma
+
+COPY package.json pnpm-lock.yaml nest-cli.json tsconfig.json ./
+COPY src ./src
+
+# Generar prisma client explícitamente (defensa en profundidad)
+RUN npx prisma generate
+
+# Compilar TypeScript
+RUN pnpm build
+
+# ── Stage 3: producción ───────────────────────────────────────────────────────
+FROM node:22-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Copiar node_modules del BUILDER (antes de cualquier prune)
+# NO usar pnpm prune --prod: elimina @prisma/client-runtime-utils
+# que es dependencia interna de Prisma 7 y rompe en runtime
+COPY --from=builder --chown=appuser:appgroup /app/node_modules ./node_modules
+COPY --from=builder --chown=appuser:appgroup /app/dist         ./dist
+COPY --from=builder --chown=appuser:appgroup /app/prisma       ./prisma
+COPY --chown=appuser:appgroup package.json ./
+
+USER appuser
+
+EXPOSE 3000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD wget -qO- http://localhost:3000/api/v1/health || exit 1
+
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main"]
+EOF
+
+ok "Dockerfile chat-ia-back listo"
+;;
+
   "pasarela-pagos")
-    LABEL="pasarela-pagos"
-    BUILT_DEPS='["@firebase/util","@nestjs/core","@prisma/engines","@scarf/scarf","argon2","msgpackr-extract","prisma","protobufjs","unrs-resolver"]'
-    ;;
+
+log "Escribiendo Dockerfile para pasarela-pagos..."
+cat > Dockerfile << 'EOF'
+# =============================================================================
+# pasarela-pagos — Dockerfile
+# =============================================================================
+
+# ── Stage 1: instalar dependencias ───────────────────────────────────────────
+FROM node:22-alpine AS deps
+
+WORKDIR /app
+
+RUN corepack enable && corepack prepare pnpm@10.11.0 --activate
+
+COPY package.json pnpm-lock.yaml ./
+
+COPY prisma ./prisma
+
+RUN pnpm install --frozen-lockfile
+
+# ── Stage 2: build ────────────────────────────────────────────────────────────
+FROM node:22-alpine AS builder
+
+WORKDIR /app
+
+RUN corepack enable && corepack prepare pnpm@10.11.0 --activate
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/prisma       ./prisma
+
+COPY package.json pnpm-lock.yaml nest-cli.json tsconfig.json ./
+COPY src ./src
+
+RUN npx prisma generate
+
+RUN pnpm build
+
+# ── Stage 3: producción ───────────────────────────────────────────────────────
+FROM node:22-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+RUN addgroup -S app && adduser -S app -G app
+
+COPY --from=builder --chown=app:app /app/node_modules ./node_modules
+COPY --from=builder --chown=app:app /app/dist         ./dist
+COPY --from=builder --chown=app:app /app/prisma       ./prisma
+COPY --chown=app:app package.json ./
+
+USER app
+
+EXPOSE 3000
+
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main.js"]
+EOF
+
+ok "Dockerfile pasarela-pagos listo"
+;;
+
   *)
-    fail "Repo no reconocido: '$PKG_NAME'"
+    echo "Repo no reconocido: '$PKG_NAME'. Esperado: chat-ia-lang o pasarela-pagos"
+    exit 1
     ;;
 esac
 
-echo -e "\n${BOLD}Fix Railway definitivo → ${CYAN}${LABEL}${NC}\n"
-
-# ─── 1. Patchear package.json ─────────────────────────────────────────────────
-log "Actualizando package.json..."
-
-node - << JSEOF
-const fs  = require('fs');
-const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-
-// Fijar versión de pnpm — Corepack usará EXACTAMENTE esta, no pnpm@latest
-pkg.packageManager = 'pnpm@10.11.0';
-
-// pnpm 10 SÍ lee esta sección de package.json
-pkg.pnpm = {
-  onlyBuiltDependencies: ${BUILT_DEPS}
-};
-
-fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
-console.log('  packageManager: pnpm@10.11.0');
-console.log('  pnpm.onlyBuiltDependencies:', ${BUILT_DEPS}.join(', '));
-JSEOF
-
-ok "package.json actualizado"
-
-# ─── 2. Borrar pnpm-workspace.yaml si existe (limpieza) ──────────────────────
-if [ -f "pnpm-workspace.yaml" ]; then
-  rm pnpm-workspace.yaml
-  ok "pnpm-workspace.yaml eliminado (ya no necesario)"
-fi
-
-# ─── 3. Borrar .npmrc si existe (limpieza) ───────────────────────────────────
-if [ -f ".npmrc" ]; then
-  rm .npmrc
-  ok ".npmrc eliminado"
-fi
-
-# ─── 4. Activar pnpm 10 con corepack y regenerar lockfile ────────────────────
-log "Activando pnpm@10.11.0 con corepack..."
-corepack prepare pnpm@10.11.0 --activate 2>/dev/null || {
-  warn "corepack prepare falló — intentando con npm install -g pnpm@10.11.0"
-  npm install -g pnpm@10.11.0 --quiet
-}
-
-PNPM_VERSION=$(pnpm --version 2>/dev/null || echo "desconocida")
-ok "pnpm activo: $PNPM_VERSION"
-
-log "Regenerando pnpm-lock.yaml con pnpm 10..."
-pnpm install --no-frozen-lockfile 2>&1 | tail -5
-ok "Lockfile regenerado con pnpm 10"
-
-# ─── 5. Verificar que el lockfile tiene los build approvals ──────────────────
-log "Verificando lockfile..."
-if grep -q "onlyBuiltDependencies\|neverBuiltDependencies" pnpm-lock.yaml 2>/dev/null; then
-  ok "Lockfile contiene configuración de build scripts"
-else
-  warn "Lockfile no muestra onlyBuiltDependencies explícito — normal en pnpm 10 (se lee de package.json en runtime)"
-fi
-
-# ─── 6. Mostrar resultado final ───────────────────────────────────────────────
 echo ""
-echo -e "${BOLD}── package.json (secciones relevantes) ────────────────────────${NC}"
-node -e "
-const p = require('./package.json');
-console.log('packageManager:', p.packageManager);
-console.log('pnpm.onlyBuiltDependencies:', JSON.stringify(p.pnpm?.onlyBuiltDependencies, null, 2));
-"
-echo ""
-
-# ─── 7. Próximos pasos ────────────────────────────────────────────────────────
-echo -e "
-${BOLD}Archivos a commitear:${NC}
-  ${CYAN}git add package.json pnpm-lock.yaml
-  git rm --cached pnpm-workspace.yaml .npmrc 2>/dev/null || true
-  git commit -m 'fix: pin pnpm@10.11.0 via packageManager + onlyBuiltDependencies'
-  git push${NC}
-
-${BOLD}Por qué funciona ahora:${NC}
-  - packageManager fijado → Corepack usa pnpm 10, no descarga pnpm 11
-  - pnpm 10 lee package.json[\"pnpm\"].onlyBuiltDependencies sin necesitar workspace.yaml
-  - lockfile regenerado con pnpm 10 → --frozen-lockfile pasa en Railway
-"
-
-ok "${LABEL} → listo para Railway 🚀"
+echo -e "${BOLD}Commitear:${NC}"
+echo -e "  ${CYAN}git add Dockerfile && git commit -m 'fix: Dockerfile pnpm 10 + no prune + prisma generate' && git push${NC}"
