@@ -12,21 +12,23 @@ import { ApiKeyGuard }          from '../../common/guards/api-key.guard';
 import { RolesGuard }           from '../../common/guards/roles.guard';
 import { QUEUE_WEBHOOKS }       from '../../common/constants/queues';
 
+const REDIS_ENABLED = process.env['REDIS_ENABLED'] === 'true';
+
 @Module({
   imports: [
     FirebaseModule,
     TenantsModule,
-    BullModule.registerQueue({ name: QUEUE_WEBHOOKS }),
+    ...(REDIS_ENABLED ? [BullModule.registerQueue({ name: QUEUE_WEBHOOKS })] : []),
   ],
-  controllers: [WebhooksController],
+  controllers: REDIS_ENABLED ? [WebhooksController] : [],
   providers: [
-    WebhookProcessor,
     WebhookSecretService,
     FirebaseAuthService,
     AuthGuard,
     TenantGuard,
     ApiKeyGuard,
     RolesGuard,
+    ...(REDIS_ENABLED ? [WebhookProcessor] : []),
   ],
   exports: [WebhookSecretService],
 })

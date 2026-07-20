@@ -16,18 +16,18 @@ import { WriteGuard }            from '../../common/guards/write.guard';
 import { PciGuard }              from '../../common/guards/pci.guard';
 import { QUEUE_RECONCILE }       from '../../common/constants/queues';
 
+const REDIS_ENABLED = process.env['REDIS_ENABLED'] === 'true';
+
 @Module({
   imports: [
     FakeModule,
     FirebaseModule,
     TenantsModule,
-    BullModule.registerQueue({ name: QUEUE_RECONCILE }),
+    ...(REDIS_ENABLED ? [BullModule.registerQueue({ name: QUEUE_RECONCILE })] : []),
   ],
   controllers: [PaymentsController],
   providers: [
     PaymentsService,
-    ReconciliationService,
-    ReconcileProcessor,
     FirebaseAuthService,
     AuthGuard,
     TenantGuard,
@@ -35,6 +35,7 @@ import { QUEUE_RECONCILE }       from '../../common/constants/queues';
     RolesGuard,
     WriteGuard,
     PciGuard,
+    ...(REDIS_ENABLED ? [ReconciliationService, ReconcileProcessor] : []),
   ],
   exports: [PaymentsService],
 })

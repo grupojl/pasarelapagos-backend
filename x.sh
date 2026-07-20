@@ -1,81 +1,152 @@
 #!/usr/bin/env bash
 # =============================================================================
-# fix-pagos-redis-noop.sh
-# Fix: cuando REDIS_ENABLED=false, el Proxy sobre Redis igual crea conexiones.
-# Solución: mock limpio sin instanciar ioredis en absoluto.
+# fix-pagos-redis-disabled-final.sh
+# Reescribe payments.module.ts, webhooks.module.ts y queue.module.ts
+# para que cuando REDIS_ENABLED=false no se registre ningún @Processor
+# ni ningún @InjectQueue que requiera conexión Redis.
 # Repo: pagos-back
 # =============================================================================
 set -euo pipefail
 
-if [ ! -f "src/modules/redis/redis.module.ts" ]; then
+if [ ! -f "src/modules/payments/payments.module.ts" ]; then
   echo "❌  Corré desde la raíz del repo pagos-back"
   exit 1
 fi
 
-echo "🔧  Actualizando redis.module.ts..."
-cp src/modules/redis/redis.module.ts src/modules/redis/redis.module.ts.bak
-
-cat > src/modules/redis/redis.module.ts << 'TSEOF'
-// src/modules/redis/redis.module.ts
-// REDIS_ENABLED=true  → cliente Redis real via REDIS_URL
-// REDIS_ENABLED=false → objeto mock sin ninguna conexión (dev sin Redis)
-import { Global, Module }   from '@nestjs/common';
-import { ConfigService }    from '@nestjs/config';
-import Redis                from 'ioredis';
-
-export const REDIS_CLIENT = 'REDIS_CLIENT';
+# ── queue.module.ts ───────────────────────────────────────────────────────────
+cp src/modules/queue/queue.module.ts src/modules/queue/queue.module.ts.bak
+cat > src/modules/queue/queue.module.ts << 'TSEOF'
+import { BullModule }     from '@nestjs/bullmq';
+import { Global, Module } from '@nestjs/common';
+import { ConfigService }  from '@nestjs/config';
+import { QUEUE_WEBHOOKS, QUEUE_RECONCILE, QUEUE_DLQ } from '../../common/constants/queues';
 
 const REDIS_ENABLED = process.env['REDIS_ENABLED'] === 'true';
 
-/**
- * Mock de Redis para desarrollo sin Redis.
- * No instancia ioredis — cero conexiones de red.
- */
-class RedisNoopClient {
-  readonly status = 'ready';
-  async get(_key: string)                              { return null; }
-  async set(_key: string, _val: string, ..._a: unknown[]) { return null; }
-  async del(..._keys: string[])                        { return 0; }
-  async incr(_key: string)                             { return 0; }
-  async expire(_key: string, _ttl: number)             { return 0; }
-  async keys(_pattern: string)                         { return []; }
-  async hget(_key: string, _field: string)             { return null; }
-  async hset(_key: string, ..._args: unknown[])        { return 0; }
-  on(_event: string, _cb: unknown)                     { return this; }
-  quit()                                               { return Promise.resolve(); }
-}
-
 @Global()
 @Module({
-  providers: [
-    {
-      provide:    REDIS_CLIENT,
-      inject:     [ConfigService],
-      useFactory: (config: ConfigService): Redis | RedisNoopClient => {
-        if (!REDIS_ENABLED) {
-          console.warn('[RedisModule] Redis deshabilitado (REDIS_ENABLED != true) — modo no-op');
-          return new RedisNoopClient() as unknown as Redis;
-        }
-        const url   = config.getOrThrow<string>('REDIS_URL');
-        const redis = new Redis(url, {
-          lazyConnect:          false,
-          enableReadyCheck:     true,
-          maxRetriesPerRequest: 3,
-          retryStrategy:        (t) => Math.min(t * 100, 3000),
-        });
-        redis.on('error', (err) => console.error('[Redis] error:', err.message));
-        return redis;
-      },
-    },
-  ],
-  exports: [REDIS_CLIENT],
+  imports: REDIS_ENABLED ? [
+    BullModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        connection: { url: config.getOrThrow<string>('REDIS_URL') },
+        defaultJobOptions: {
+          attempts: 5,
+          backoff:  { type: 'exponential', delay: 1_000 },
+          removeOnComplete: { count: 200 },
+          removeOnFail:     { count: 500 },
+        },
+      }),
+    }),
+    BullModule.registerQueue(
+      { name: QUEUE_WEBHOOKS },
+      { name: QUEUE_RECONCILE },
+      { name: QUEUE_DLQ },
+    ),
+  ] : [],
+  exports: REDIS_ENABLED ? [BullModule] : [],
 })
-export class RedisModule {}
+export class QueueModule {}
 TSEOF
+echo "✅  queue.module.ts"
 
-echo "✅  redis.module.ts — mock limpio sin ioredis cuando REDIS_ENABLED=false"
+# ── payments.module.ts ────────────────────────────────────────────────────────
+cp src/modules/payments/payments.module.ts src/modules/payments/payments.module.ts.bak
+cat > src/modules/payments/payments.module.ts << 'TSEOF'
+import { BullModule }            from '@nestjs/bullmq';
+import { Module }                from '@nestjs/common';
+import { PaymentsController }    from './payments.controller';
+import { PaymentsService }       from './payments.service';
+import { ReconciliationService } from './reconciliation.service';
+import { ReconcileProcessor }    from './reconcile.processor';
+import { FakeModule }            from '../providers/adapters/fake/fake.module';
+import { FirebaseModule }        from '../firebase/firebase.module';
+import { TenantsModule }         from '../tenants/tenants.module';
+import { FirebaseAuthService }   from '../firebase/firebase-auth.service';
+import { AuthGuard }             from '../../common/guards/auth.guard';
+import { TenantGuard }           from '../../common/guards/tenant.guard';
+import { ApiKeyGuard }           from '../../common/guards/api-key.guard';
+import { RolesGuard }            from '../../common/guards/roles.guard';
+import { WriteGuard }            from '../../common/guards/write.guard';
+import { PciGuard }              from '../../common/guards/pci.guard';
+import { QUEUE_RECONCILE }       from '../../common/constants/queues';
+
+const REDIS_ENABLED = process.env['REDIS_ENABLED'] === 'true';
+
+@Module({
+  imports: [
+    FakeModule,
+    FirebaseModule,
+    TenantsModule,
+    ...(REDIS_ENABLED ? [BullModule.registerQueue({ name: QUEUE_RECONCILE })] : []),
+  ],
+  controllers: [PaymentsController],
+  providers: [
+    PaymentsService,
+    FirebaseAuthService,
+    AuthGuard,
+    TenantGuard,
+    ApiKeyGuard,
+    RolesGuard,
+    WriteGuard,
+    PciGuard,
+    ...(REDIS_ENABLED ? [ReconciliationService, ReconcileProcessor] : []),
+  ],
+  exports: [PaymentsService],
+})
+export class PaymentsModule {}
+TSEOF
+echo "✅  payments.module.ts"
+
+# ── webhooks.module.ts ────────────────────────────────────────────────────────
+# WebhooksController tiene @InjectQueue en el constructor — cuando REDIS_ENABLED=false
+# no podemos registrar ese controller. Lo reemplazamos por uno stub.
+cp src/modules/webhooks/webhooks.module.ts src/modules/webhooks/webhooks.module.ts.bak
+cat > src/modules/webhooks/webhooks.module.ts << 'TSEOF'
+import { BullModule }           from '@nestjs/bullmq';
+import { Module }               from '@nestjs/common';
+import { WebhooksController }   from './webhooks.controller';
+import { WebhookProcessor }     from './webhook.processor';
+import { WebhookSecretService } from './webhook-secret.service';
+import { FirebaseModule }       from '../firebase/firebase.module';
+import { TenantsModule }        from '../tenants/tenants.module';
+import { FirebaseAuthService }  from '../firebase/firebase-auth.service';
+import { AuthGuard }            from '../../common/guards/auth.guard';
+import { TenantGuard }          from '../../common/guards/tenant.guard';
+import { ApiKeyGuard }          from '../../common/guards/api-key.guard';
+import { RolesGuard }           from '../../common/guards/roles.guard';
+import { QUEUE_WEBHOOKS }       from '../../common/constants/queues';
+
+const REDIS_ENABLED = process.env['REDIS_ENABLED'] === 'true';
+
+@Module({
+  imports: [
+    FirebaseModule,
+    TenantsModule,
+    ...(REDIS_ENABLED ? [BullModule.registerQueue({ name: QUEUE_WEBHOOKS })] : []),
+  ],
+  controllers: REDIS_ENABLED ? [WebhooksController] : [],
+  providers: [
+    WebhookSecretService,
+    FirebaseAuthService,
+    AuthGuard,
+    TenantGuard,
+    ApiKeyGuard,
+    RolesGuard,
+    ...(REDIS_ENABLED ? [WebhookProcessor] : []),
+  ],
+  exports: [WebhookSecretService],
+})
+export class WebhooksModule {}
+TSEOF
+echo "✅  webhooks.module.ts"
+
+# ── ReconciliationService usa @InjectQueue — necesita guard también ───────────
+# Cuando REDIS_ENABLED=false ReconciliationService no se registra, OK.
+# Pero si algún servicio lo inyecta como dependencia directa hay que protegerlo.
 echo ""
-echo "🔧  Verificando queue.module.ts (debe tener exports condicional)..."
-grep "exports:" src/modules/queue/queue.module.ts || echo "⚠️  Revisar queue.module.ts manualmente"
+echo "🔍  Verificando dependencias de ReconciliationService..."
+grep -r "ReconciliationService" src/ --include="*.ts" -l | grep -v "reconcili" || echo "   Sin dependencias externas"
+
 echo ""
-echo "✅  Listo — reiniciá el contenedor"
+echo "✅  Fix completo — reiniciá el contenedor"
