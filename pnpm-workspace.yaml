@@ -1,0 +1,17 @@
+# pnpm-workspace.yaml
+#
+# pnpm 9+ ya no lee la sección "pnpm" de package.json.
+# Este archivo es el único lugar válido para onlyBuiltDependencies.
+# Funciona aunque el repo NO sea un monorepo.
+# Ref: https://pnpm.io/settings#onlybuiltdependencies
+
+onlyBuiltDependencies:
+  - '@firebase/util'
+  - '@nestjs/core'
+  - '@prisma/engines'
+  - '@scarf/scarf'
+  - argon2
+  - msgpackr-extract
+  - prisma
+  - protobufjs
+  - unrs-resolver
