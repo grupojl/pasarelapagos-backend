@@ -51,4 +51,4 @@ USER app
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "npx prisma migrate deploy --config prisma.config.ts && node dist/src/main.js"]
+CMD ["dumb-init", "node", "dist/src/main"]
