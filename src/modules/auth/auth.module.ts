@@ -1,8 +1,3 @@
-// src/modules/auth/auth.module.ts
-//
-// Módulo de autenticación. Solo provee FirebaseAuthService y el controller.
-// AuthGuard, TenantGuard, etc. viven en SharedGuardsModule (@Global) —
-// no se re-declaran aquí para evitar instancias duplicadas en el container.
 import { Module }              from '@nestjs/common';
 import { AuthController }      from './auth.controller';
 import { FirebaseModule }      from '../firebase/firebase.module';

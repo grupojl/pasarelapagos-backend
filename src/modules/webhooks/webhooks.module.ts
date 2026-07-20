@@ -1,22 +1,14 @@
-// src/modules/webhooks/webhooks.module.ts
-import { BullModule }         from '@nestjs/bullmq';
-import { Module }             from '@nestjs/common';
-import { WebhooksController } from './webhooks.controller';
-import { WebhookProcessor }   from './webhook.processor';
+import { BullModule }           from '@nestjs/bullmq';
+import { Module }               from '@nestjs/common';
+import { WebhooksController }   from './webhooks.controller';
+import { WebhookProcessor }     from './webhook.processor';
 import { WebhookSecretService } from './webhook-secret.service';
-import { SharedGuardsModule } from '../../common/shared-guards.module';
-import { QUEUE_WEBHOOKS }     from '../../common/constants/queues';
+import { QUEUE_WEBHOOKS }       from '../../common/constants/queues';
 
 @Module({
-  imports: [
-    SharedGuardsModule,
-    BullModule.registerQueue({ name: QUEUE_WEBHOOKS }),
-  ],
+  imports:     [BullModule.registerQueue({ name: QUEUE_WEBHOOKS })],
   controllers: [WebhooksController],
-  providers: [
-    WebhookProcessor,
-    WebhookSecretService,
-  ],
-  exports: [WebhookSecretService],
+  providers:   [WebhookProcessor, WebhookSecretService],
+  exports:     [WebhookSecretService],
 })
 export class WebhooksModule {}
