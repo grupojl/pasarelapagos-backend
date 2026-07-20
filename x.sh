@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
 # =============================================================================
-# fix-pagos-tenant-throttler.sh
-# Fix: TenantThrottlerGuard no puede resolver el argumento en índice [2]
-# Root cause: ThrottlerModuleOptions en el constructor no es inyectable por DI
-# Solución: reescribir el guard sin ese parámetro — ThrottlerGuard base
-#           lo resuelve internamente via ThrottlerModule.forRootAsync()
+# fix-pagos-queue-names.sh
+# Fix: BullMQ 5.x — "Queue name cannot contain :"
+# Root cause: los nombres en src/common/constants/queues.ts usan ":" como
+#             separador, pero BullMQ lo reserva para prefijos Redis internos.
+# Solución: reemplazar ":" por "-" en los nombres de las queues.
+#           Todos los @Processor y @InjectQueue referencian las constantes,
+#           por lo que solo hay que tocar el archivo de constantes.
 # Repo: pagos-back (src en raíz)
 # =============================================================================
 set -euo pipefail
 
-FILE="src/common/guards/tenant-throttler.guard.ts"
+FILE="src/common/constants/queues.ts"
 
 echo "🔍  Verificando $FILE ..."
 
@@ -19,9 +21,9 @@ if [ ! -f "$FILE" ]; then
   exit 1
 fi
 
-# Idempotencia: si ya fue corregido no tiene ThrottlerModuleOptions
-if ! grep -q "ThrottlerModuleOptions" "$FILE"; then
-  echo "⚠️  ThrottlerModuleOptions ya no está en el guard — nada que hacer"
+# Idempotencia: si ya no tiene ":" en los valores de las constantes, no hacer nada
+if ! grep -E "= '[^']*:[^']*'" "$FILE" > /dev/null 2>&1; then
+  echo "⚠️  No se encontraron nombres con ':' — nada que hacer"
   exit 0
 fi
 
@@ -30,88 +32,26 @@ cp "$FILE" "${FILE}.bak"
 echo "💾  Backup guardado en ${FILE}.bak"
 
 cat > "$FILE" << 'TSEOF'
-// src/common/guards/tenant-throttler.guard.ts
-import {
-  ExecutionContext,
-  Injectable,
-  Inject,
-} from '@nestjs/common';
-import {
-  ThrottlerGuard,
-  ThrottlerException,
-  ThrottlerStorage,
-} from '@nestjs/throttler';
-import { Reflector } from '@nestjs/core';
-import Redis from 'ioredis';
-import { REDIS_CLIENT } from '../../modules/redis/redis.module';
-import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
+// src/common/constants/queues.ts
+//
+// IMPORTANTE: BullMQ 5.x reserva ":" para prefijos internos de Redis.
+// Los nombres de queues NO pueden contener ":".
+// Usar guiones como separador de namespace.
 
-/**
- * Rate limiter por tenant usando Redis como storage.
- *
- * Clave:  rl:{tenantId}:{windowStart}
- * Límite: configurable por env (THROTTLE_LIMIT_PER_TENANT, default 200 req/min)
- *
- * Las rutas públicas (webhooks, health) están exentas.
- *
- * NOTA: ThrottlerModuleOptions NO se inyecta en el constructor —
- * ThrottlerGuard base lo resuelve internamente a través del módulo.
- * Inyectarlo explícitamente rompe el DI container en NestJS 11.
- */
-@Injectable()
-export class TenantThrottlerGuard extends ThrottlerGuard {
-  constructor(
-    @Inject(REDIS_CLIENT) private readonly redis: Redis,
-    storageService: ThrottlerStorage,
-    reflector: Reflector,
-  ) {
-    super({} as any, storageService, reflector);
-  }
+export const QUEUE_WEBHOOKS  = 'webhooks-process';
+export const QUEUE_RECONCILE = 'payments-reconcile';
+export const QUEUE_DLQ       = 'payments-dlq';
 
-  override async canActivate(context: ExecutionContext): Promise<boolean> {
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-    if (isPublic) return true;
-
-    const req    = context.switchToHttp().getRequest<Record<string, any>>();
-    const tenant = req['tenant'] as { id: string } | undefined;
-
-    // Sin tenant resuelto: dejar pasar (AuthGuard ya lo validó)
-    if (!tenant) return super.canActivate(context);
-
-    const ttl    = Number(process.env['THROTTLE_TTL']               ?? 60);
-    const limit  = Number(process.env['THROTTLE_LIMIT_PER_TENANT']  ?? process.env['THROTTLE_LIMIT'] ?? 200);
-    const window = Math.floor(Date.now() / 1000 / ttl);
-    const key    = `rl:${tenant.id}:${window}`;
-
-    const current = await this.redis.incr(key);
-    if (current === 1) {
-      await this.redis.expire(key, ttl + 5);
-    }
-
-    if (current > limit) {
-      throw new ThrottlerException();
-    }
-
-    return true;
-  }
-
-  // Tracker fallback para rutas sin tenant (usa IP o proyecto)
-  protected override async getTracker(req: Record<string, any>): Promise<string> {
-    const projectId      = req.headers?.['x-project-id']      as string | undefined;
-    const organizationId = req.headers?.['x-organization-id'] as string | undefined;
-
-    if (projectId)      return `proj:${projectId}`;
-    if (organizationId) return `org:${organizationId}`;
-
-    return (req.ip as string | undefined) ?? req.connection?.remoteAddress ?? 'unknown';
-  }
-}
+export const JOB_PROCESS_WEBHOOK   = 'process-webhook';
+export const JOB_RECONCILE_PAYMENT = 'reconcile-payment';
 TSEOF
 
-echo "✅  tenant-throttler.guard.ts actualizado"
+echo "✅  queues.ts actualizado"
 echo ""
 echo "📄  Contenido final:"
 cat "$FILE"
+echo ""
+echo "⚠️  NOTA: Si tenés jobs pendientes en Redis con los nombres anteriores"
+echo "   ('webhooks:process', 'payments:reconcile', 'payments:dlq') no serán"
+echo "   procesados con los nuevos nombres. En dev esto es aceptable."
+echo "   En prod hacer el cambio en una ventana de mantenimiento."
