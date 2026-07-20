@@ -26,6 +26,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/prisma       ./prisma
 
 COPY package.json pnpm-lock.yaml nest-cli.json tsconfig.json ./
+COPY prisma.config.ts ./
 COPY src ./src
 
 RUN npx prisma generate
