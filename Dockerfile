@@ -29,7 +29,7 @@ COPY package.json pnpm-lock.yaml nest-cli.json tsconfig.json ./
 COPY prisma.config.ts ./
 COPY src ./src
 
-RUN npx prisma generate
+RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" npx prisma generate
 
 RUN pnpm build
 
