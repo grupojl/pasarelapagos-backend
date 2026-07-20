@@ -1,761 +1,168 @@
-This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+This file is a merged representation of a subset of the codebase, containing specifically included files and files not matching ignore patterns, combined into a single document by Repomix.
 
-<file_summary>
-This section contains a summary of this file.
+# File Summary
 
-<purpose>
-This file contains a packed representation of the entire repository's contents.
+## Purpose
+This file contains a packed representation of a subset of the repository's contents that is considered the most important context.
 It is designed to be easily consumable by AI systems for analysis, code review,
 or other automated processes.
-</purpose>
 
-<file_format>
+## File Format
 The content is organized as follows:
 1. This summary section
 2. Repository information
 3. Directory structure
 4. Repository files (if enabled)
 5. Multiple file entries, each consisting of:
-  - File path as an attribute
-  - Full contents of the file
-</file_format>
+  a. A header with the file path (## File: path/to/file)
+  b. The full contents of the file in a code block
 
-<usage_guidelines>
+## Usage Guidelines
 - This file should be treated as read-only. Any changes should be made to the
   original repository files, not this packed version.
 - When processing this file, use the file path to distinguish
   between different files in the repository.
 - Be aware that this file may contain sensitive information. Handle it with
   the same level of security as you would the original repository.
-</usage_guidelines>
 
-<notes>
+## Notes
 - Some files may have been excluded based on .gitignore rules and Repomix's configuration
 - Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Only files matching these patterns are included: src/**/*, prisma/**/*, package.json, tsconfig.json, nest-cli.json
+- Files matching these patterns are excluded: dist, node_modules, .pnpm-store, pnpm-lock.yaml, prisma/client, *.log, .env, .env.*, test/**/*, **/*.spec.ts, **/*.e2e-spec.ts
 - Files matching patterns in .gitignore are excluded
 - Files matching default ignore patterns are excluded
 - Files are sorted by Git change count (files with more changes are at the bottom)
-</notes>
 
-</file_summary>
-
-<directory_structure>
-.env.example
-.gitignore
-.prettierrc
-docker-compose.yml
-Dockerfile
-docs/runbooks/doble-cobro.md
-docs/runbooks/provider-caido.md
-docs/runbooks/webhook-flood.md
-eslint.config.mjs
+# Directory Structure
+```
+prisma/
+  migrations/
+    20260501032604_init/
+      migration.sql
+    migration_lock.toml
+  schema.prisma
+  seed.ts
+src/
+  common/
+    constants/
+      queues.ts
+    decorators/
+      org.decorator.ts
+      public.decorator.ts
+      roles.decorator.ts
+      tenant.decorator.ts
+      user.decorator.ts
+    errors/
+      payment-error.catalog.ts
+      payment.exception.ts
+    filters/
+      all-exceptions.filter.ts
+    guards/
+      api-key.guard.ts
+      auth.guard.ts
+      firebase-auth.guard.ts
+      pci.guard.ts
+      roles.guard.ts
+      tenant-throttler.guard.ts
+      tenant.guard.ts
+      write.guard.ts
+    interceptors/
+      idempotency.interceptor.ts
+    interfaces/
+      org-context.interface.ts
+    services/
+      pii.module.ts
+      pii.service.ts
+    types/
+      express.d.ts
+  config/
+    env.validation.ts
+  modules/
+    audit/
+      audit.module.ts
+      audit.service.ts
+    auth/
+      auth.controller.ts
+      auth.module.ts
+    firebase/
+      firebase-auth.service.ts
+      firebase.module.ts
+    health/
+      health.controller.ts
+      health.module.ts
+    metrics/
+      metrics.module.ts
+      metrics.service.ts
+    payments/
+      dto/
+        create-payment.dto.ts
+        list-payments.dto.ts
+      payment-state.machine.ts
+      payments.controller.ts
+      payments.module.ts
+      payments.service.ts
+      reconcile.processor.ts
+      reconciliation.service.ts
+    prisma/
+      prisma.module.ts
+      prisma.service.ts
+    providers/
+      adapters/
+        conekta/
+          conekta-error.mapper.ts
+          conekta.module.ts
+          conekta.provider.ts
+        dlocal/
+          dlocal-error.mapper.ts
+          dlocal.module.ts
+          dlocal.provider.ts
+        fake/
+          fake.module.ts
+          fake.provider.ts
+        mercadopago/
+          mercadopago-error.mapper.ts
+          mercadopago.module.ts
+          mercadopago.provider.ts
+        pagarme/
+          pagarme-error.mapper.ts
+          pagarme.module.ts
+          pagarme.provider.ts
+        stripe/
+          stripe-error.mapper.ts
+          stripe.module.ts
+          stripe.provider.ts
+      circuit-breaker.service.ts
+      provider.interface.ts
+      provider.registry.ts
+      providers.module.ts
+      routing.service.ts
+    queue/
+      dlq.processor.ts
+      queue.module.ts
+    redis/
+      redis.module.ts
+    tenants/
+      api-key.service.ts
+      tenants.controller.ts
+      tenants.module.ts
+    webhooks/
+      webhook-secret.service.ts
+      webhook.processor.ts
+      webhooks.controller.ts
+      webhooks.module.ts
+  app.module.ts
+  instrumentation.ts
+  main.ts
 nest-cli.json
 package.json
-prisma.config.ts
-prisma/migrations/20260419134827_init/migration.sql
-prisma/migrations/20260419210553_sprint_6/migration.sql
-prisma/migrations/20260427182755_sprint7/migration.sql
-prisma/migrations/migration_lock.toml
-prisma/schema.prisma
-prisma/seed.ts
-README.md
-src/app.module.ts
-src/common/constants/queues.ts
-src/common/decorators/org.decorator.ts
-src/common/decorators/public.decorator.ts
-src/common/decorators/roles.decorator.ts
-src/common/decorators/tenant.decorator.ts
-src/common/decorators/user.decorator.ts
-src/common/errors/payment-error.catalog.ts
-src/common/errors/payment.exception.ts
-src/common/filters/all-exceptions.filter.ts
-src/common/guards/api-key.guard.ts
-src/common/guards/auth.guard.ts
-src/common/guards/firebase-auth.guard.ts
-src/common/guards/pci.guard.ts
-src/common/guards/roles.guard.ts
-src/common/guards/tenant-throttler.guard.ts
-src/common/guards/tenant.guard.ts
-src/common/guards/write.guard.ts
-src/common/interceptors/idempotency.interceptor.ts
-src/common/interfaces/org-context.interface.ts
-src/common/services/pii.module.ts
-src/common/services/pii.service.ts
-src/config/env.validation.ts
-src/instrumentation.ts
-src/main.ts
-src/modules/audit/audit.module.ts
-src/modules/audit/audit.service.ts
-src/modules/auth/auth.controller.ts
-src/modules/auth/auth.module.ts
-src/modules/firebase/firebase-auth.service.ts
-src/modules/firebase/firebase.module.ts
-src/modules/health/health.controller.ts
-src/modules/health/health.module.ts
-src/modules/metrics/metrics.module.ts
-src/modules/metrics/metrics.service.ts
-src/modules/payments/dto/create-payment.dto.ts
-src/modules/payments/dto/list-payments.dto.ts
-src/modules/payments/payment-state.machine.ts
-src/modules/payments/payments.controller.ts
-src/modules/payments/payments.module.ts
-src/modules/payments/payments.service.ts
-src/modules/payments/reconcile.processor.ts
-src/modules/payments/reconciliation.service.ts
-src/modules/prisma/prisma.module.ts
-src/modules/prisma/prisma.service.ts
-src/modules/providers/adapters/conekta/conekta-error.mapper.ts
-src/modules/providers/adapters/conekta/conekta.module.ts
-src/modules/providers/adapters/conekta/conekta.provider.ts
-src/modules/providers/adapters/dlocal/dlocal-error.mapper.ts
-src/modules/providers/adapters/dlocal/dlocal.module.ts
-src/modules/providers/adapters/dlocal/dlocal.provider.ts
-src/modules/providers/adapters/fake/fake.module.ts
-src/modules/providers/adapters/fake/fake.provider.ts
-src/modules/providers/adapters/mercadopago/mercadopago-error.mapper.ts
-src/modules/providers/adapters/mercadopago/mercadopago.module.ts
-src/modules/providers/adapters/mercadopago/mercadopago.provider.ts
-src/modules/providers/adapters/pagarme/pagarme-error.mapper.ts
-src/modules/providers/adapters/pagarme/pagarme.module.ts
-src/modules/providers/adapters/pagarme/pagarme.provider.ts
-src/modules/providers/adapters/stripe/stripe-error.mapper.ts
-src/modules/providers/adapters/stripe/stripe.module.ts
-src/modules/providers/adapters/stripe/stripe.provider.ts
-src/modules/providers/circuit-breaker.service.ts
-src/modules/providers/provider.interface.ts
-src/modules/providers/provider.registry.ts
-src/modules/providers/providers.module.ts
-src/modules/providers/routing.service.ts
-src/modules/queue/dlq.processor.ts
-src/modules/queue/queue.module.ts
-src/modules/redis/redis.module.ts
-src/modules/tenants/api-key.service.ts
-src/modules/tenants/tenants.controller.ts
-src/modules/tenants/tenants.module.ts
-src/modules/webhooks/webhook-secret.service.ts
-src/modules/webhooks/webhook.processor.ts
-src/modules/webhooks/webhooks.controller.ts
-src/modules/webhooks/webhooks.module.ts
-test/app.e2e-spec.ts
-test/auth.e2e-spec.ts
-test/jest-e2e.json
-test/load/k6-payments.ts
-test/payments.e2e-spec.ts
-test/state-machine.spec.ts
-test/stripe-adapter.spec.ts
-test/webhooks.e2e-spec.ts
-tsconfig.build.json
 tsconfig.json
-x.sh
-</directory_structure>
+```
 
-<files>
-This section contains the contents of the repository's files.
+# Files
 
-<file path=".env.example">
-# ============================================================
-# Runtime
-# ============================================================
-NODE_ENV=development
-PORT=3000
-
-# ============================================================
-# Base de datos (Postgres)
-# ============================================================
-DATABASE_URL="postgresql://user:pass@localhost:5432/pasarela?schema=public"
-
-# ============================================================
-# Redis (colas + idempotencia + rate limiting)
-# ============================================================
-REDIS_URL=redis://localhost:6379
-
-# ============================================================
-# CORS
-# ============================================================
-CORS_ORIGINS=http://localhost:3000,http://localhost:3001
-
-# ============================================================
-# Rate limiting por tenant (req por minuto)
-# ============================================================
-THROTTLE_TTL=60
-THROTTLE_LIMIT=200
-THROTTLE_LIMIT_PER_TENANT=200
-
-# ============================================================
-# Webhook secrets — rotation: define el anterior durante la ventana
-# ============================================================
-WEBHOOK_SIGNING_SECRET=change-me-in-production
-WEBHOOK_SIGNING_SECRET_PREVIOUS=
-WEBHOOK_TOLERANCE_SECONDS=300
-
-# ============================================================
-# Logging
-# ============================================================
-LOG_LEVEL=info
-
-# ============================================================
-# OpenTelemetry (opcional, default desactivado)
-# ============================================================
-OTEL_ENABLED=false
-OTEL_SERVICE_NAME=pasarela-pagos
-OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
-
-# ============================================================
-# Reconciliación (cron expression, default: cada 5 minutos)
-# ============================================================
-# RECONCILE_CRON=*/5 * * * *
-
-# ============================================================
-# Firebase — mismo proyecto que el owner-dashboard
-# Obtener desde: Firebase Console → Configuración → Cuentas de servicio
-# ============================================================
-FIREBASE_PROJECT_ID=tu-proyecto-id
-FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@tu-proyecto.iam.gserviceaccount.com
-# Nota: los \n en la private key deben ser literales \\n en el .env
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIE...\n-----END PRIVATE KEY-----\n"
-
-# ============================================================
-# Ecosistema SSO — URL del owner-dashboard
-# Usado para consultar memberships/permisos si los claims del token están vacíos
-# ============================================================
-DASHBOARD_API_URL=http://localhost:3001
-
-# ============================================================
-# Providers de pago (solo los que uses)
-# ============================================================
-
-# Stripe (US, EU, internacional)
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-
-# MercadoPago (AR, BR, MX, CO, CL, PE, UY)
-MERCADOPAGO_ACCESS_TOKEN=TEST-...
-MERCADOPAGO_WEBHOOK_SECRET=
-
-# Pagar.me (BR: card + PIX)
-PAGARME_API_KEY=ak_test_...
-PAGARME_WEBHOOK_SECRET=
-
-# Conekta (MX: card + OXXO)
-CONEKTA_PRIVATE_KEY=key_test_...
-CONEKTA_WEBHOOK_SECRET=
-
-# dLocal (PE, CL, CO, UY y más)
-DLOCAL_API_KEY=
-DLOCAL_SECRET_KEY=
-
-# ============================================================
-# PII encryption (opcional, requerido en producción)
-# ============================================================
-# PII_ENCRYPTION_KEY=<64 char hex>
-# PII_SEARCH_SALT=<random string>
-</file>
-
-<file path=".gitignore">
-# compiled output
-/dist
-/node_modules
-/build
-
-# Logs
-logs
-*.log
-npm-debug.log*
-pnpm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
-
-# OS
-.DS_Store
-
-# Tests
-/coverage
-/.nyc_output
-
-# IDEs and editors
-/.idea
-.project
-.classpath
-.c9/
-*.launch
-.settings/
-*.sublime-workspace
-
-# IDE - VSCode
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-
-# dotenv environment variable files
-.env
-.env.development.local
-.env.test.local
-.env.production.local
-.env.local
-
-# temp directory
-.temp
-.tmp
-
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
-
-# Diagnostic reports (https://nodejs.org/api/report.html)
-report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
-
-/generated/prisma
-</file>
-
-<file path=".prettierrc">
-{
-  "singleQuote": true,
-  "trailingComma": "all"
-}
-</file>
-
-<file path="docker-compose.yml">
-services:
-  postgres:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: pass
-      POSTGRES_DB: pasarela
-    ports: ["5432:5432"]
-    volumes: [pgdata:/var/lib/postgresql/data]
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "user"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
-  redis:
-    image: redis:7-alpine
-    restart: unless-stopped
-    ports: ["6379:6379"]
-    volumes: [redisdata:/data]
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
-volumes:
-  pgdata:
-  redisdata:
-</file>
-
-<file path="Dockerfile">
-# syntax=docker/dockerfile:1.7
-FROM node:22-alpine AS deps
-WORKDIR /app
-RUN corepack enable
-COPY package.json pnpm-lock.yaml* ./
-RUN pnpm install --frozen-lockfile
-
-FROM node:22-alpine AS build
-WORKDIR /app
-RUN corepack enable
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-RUN pnpm prisma generate && pnpm build && pnpm prune --prod
-
-FROM node:22-alpine AS runtime
-WORKDIR /app
-ENV NODE_ENV=production
-RUN addgroup -S app && adduser -S app -G app
-COPY --from=build --chown=app:app /app/node_modules ./node_modules
-COPY --from=build --chown=app:app /app/dist ./dist
-COPY --from=build --chown=app:app /app/package.json ./package.json
-COPY --from=build --chown=app:app /app/prisma ./prisma
-USER app
-EXPOSE 3000
-CMD ["node", "dist/main.js"]
-</file>
-
-<file path="docs/runbooks/doble-cobro.md">
-# Runbook: Doble cobro
-
-## Síntomas
-- Cliente reporta dos débitos en su tarjeta por el mismo concepto
-- Dos payments con el mismo `externalId` o mismo monto/cliente/fecha
-
-## Diagnóstico
-
+## File: prisma/migrations/20260501032604_init/migration.sql
 ```sql
--- Buscar posibles duplicados por customer + monto + fecha
-SELECT
-  p1.id,
-  p2.id as duplicate_id,
-  p1.tenant_id,
-  p1.customer_id,
-  p1.amount_minor,
-  p1.created_at,
-  p2.created_at as dup_created_at
-FROM "Payment" p1
-JOIN "Payment" p2
-  ON p1.customer_id = p2.customer_id
-  AND p1.amount_minor = p2.amount_minor
-  AND p1.id != p2.id
-  AND ABS(EXTRACT(EPOCH FROM (p1.created_at - p2.created_at))) < 300 -- 5 min
-WHERE p1.status = 'CAPTURED'
-  AND p2.status = 'CAPTURED'
-ORDER BY p1.created_at DESC;
-```
-
-## Acciones
-
-### 1. Verificar idempotencia
-Si ambos pagos tienen la misma `idempotencyKey` → bug del cliente (no respetó el contrato). Hacer refund del segundo cobro.
-
-Si tienen distinta key pero mismo monto → posible bug del cliente que no reusó la key. Verificar con el cliente.
-
-### 2. Emitir refund del duplicado
-
-```bash
-curl -X POST https://api.tuapp.com/api/v1/payments/PAYMENT_ID/refund \
-  -H "x-api-key: $ADMIN_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"reason": "duplicate", "full": true}'
-```
-
-### 3. Notificar al cliente
-Enviar comunicación con el ID del refund y fecha estimada de acreditación (3-5 días hábiles).
-
-## Prevención
-- Idempotency-Key obligatoria en POST /payments
-- Validación doble: Redis (TTL 24h) + DB UNIQUE constraint
-- Monitoreo: alerta si un customer tiene > 2 pagos capturados en < 5 min
-</file>
-
-<file path="docs/runbooks/provider-caido.md">
-# Runbook: Provider caído
-
-## Síntomas
-- Pagos con `status: FAILED` y `failureCode: PROVIDER_UNAVAILABLE`
-- Circuit breaker abierto en `/api/v1/health/ready`
-- Alertas de `provider_circuit_breaker_open{provider="X"} = 1`
-
-## Diagnóstico rápido
-
-```bash
-# Ver estado de todos los circuit breakers
-curl https://api.tuapp.com/api/v1/health/ready | jq
-
-# Ver últimos pagos fallidos
-SELECT id, provider_id, failure_code, failure_message, created_at
-FROM "Payment"
-WHERE status = 'FAILED'
-  AND created_at > NOW() - INTERVAL '30 minutes'
-ORDER BY created_at DESC
-LIMIT 20;
-
-# Ver logs del provider
-pnpm logs | grep "providerId=stripe" | tail -50
-```
-
-## Acciones
-
-### 1. Activar fallback inmediato (sin redeploy)
-
-```sql
--- Deshabilitar el provider caído temporalmente
-UPDATE "ProviderRoute"
-SET active = false
-WHERE provider_id = 'stripe'  -- cambiar por el provider caído
-  AND country = 'US';
-
--- Subir prioridad del fallback
-UPDATE "ProviderRoute"
-SET priority = 200
-WHERE provider_id = 'dlocal'
-  AND country = 'US';
-```
-
-El cache de rutas expira en 5 minutos. Para forzar reload inmediato, reiniciar la instancia.
-
-### 2. Reanudar cuando el provider se recupera
-
-```sql
-UPDATE "ProviderRoute"
-SET active = true, priority = 100
-WHERE provider_id = 'stripe';
-```
-
-### 3. Reconciliar pagos perdidos
-
-```bash
-# Los pagos PENDING > 30 min se reconcilian automáticamente (cron cada 5min).
-# Para forzar reconciliación manual de un pago específico:
-curl -X POST https://api.tuapp.com/api/v1/admin/reconcile/PAYMENT_ID \
-  -H "x-api-key: $ADMIN_KEY"
-```
-
-## Escalada
-Si el provider lleva > 2h caído: contactar soporte del provider y notificar clientes afectados.
-</file>
-
-<file path="docs/runbooks/webhook-flood.md">
-# Runbook: Webhook flood
-
-## Síntomas
-- Cola `webhooks:process` con miles de jobs pendientes
-- Redis con uso de memoria elevado
-- Latencia alta en el endpoint `/api/v1/webhooks/:provider`
-
-## Diagnóstico rápido
-
-```bash
-# Ver estado de las colas BullMQ
-# (instalar bull-board o usar redis-cli)
-redis-cli LLEN "bull:webhooks:process:wait"
-
-# Ver webhooks duplicados en las últimas 2hs
-SELECT provider_id, COUNT(*) as total
-FROM "WebhookInbound"
-WHERE created_at > NOW() - INTERVAL '2 hours'
-GROUP BY provider_id
-ORDER BY total DESC;
-```
-
-## Acciones
-
-### 1. Throttle del endpoint de webhooks
-
-El sistema ya deduplica por `(providerId, externalId)` — el flood no crea procesamiento duplicado, pero puede saturar la cola.
-
-Si el flood es legítimo (burst de pagos reales), el sistema lo maneja solo. Monitorear que el lag de procesamiento baje.
-
-### 2. Si es un ataque / spam
-
-```bash
-# Bloquear IP a nivel infra (Cloudflare / nginx)
-# Mientras tanto, pausar la cola para no saturar workers:
-redis-cli RENAME "bull:webhooks:process:wait" "bull:webhooks:process:wait.paused"
-```
-
-### 3. Limpiar webhooks falsos
-
-```sql
-DELETE FROM "WebhookInbound"
-WHERE status = 'received'
-  AND created_at > NOW() - INTERVAL '1 hour'
-  AND provider_id = 'fake_attacker';
-```
-
-## Prevención
-- Rate limit por IP en Cloudflare (50 req/s por IP al endpoint /webhooks)
-- Validación de firma HMAC rechaza eventos sin firma válida
-</file>
-
-<file path="eslint.config.mjs">
-// @ts-check
-import eslint from '@eslint/js';
-import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
-import globals from 'globals';
-import tseslint from 'typescript-eslint';
-
-export default tseslint.config(
-  {
-    ignores: ['eslint.config.mjs'],
-  },
-  eslint.configs.recommended,
-  ...tseslint.configs.recommendedTypeChecked,
-  eslintPluginPrettierRecommended,
-  {
-    languageOptions: {
-      globals: {
-        ...globals.node,
-        ...globals.jest,
-      },
-      sourceType: 'commonjs',
-      parserOptions: {
-        projectService: true,
-        tsconfigRootDir: import.meta.dirname,
-      },
-    },
-  },
-  {
-    rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-floating-promises': 'warn',
-      '@typescript-eslint/no-unsafe-argument': 'warn',
-      "prettier/prettier": ["error", { endOfLine: "auto" }],
-    },
-  },
-);
-</file>
-
-<file path="nest-cli.json">
-{
-  "$schema": "https://json.schemastore.org/nest-cli",
-  "collection": "@nestjs/schematics",
-  "sourceRoot": "src",
-  "compilerOptions": {
-    "deleteOutDir": true
-  }
-}
-</file>
-
-<file path="package.json">
-{
-  "name": "pasarela-pagos",
-  "version": "0.0.1",
-  "description": "",
-  "author": "",
-  "private": true,
-  "license": "UNLICENSED",
-  "scripts": {
-    "build": "nest build",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "nest start",
-    "start:dev": "nest start --watch",
-    "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:cov": "jest --coverage",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate:dev": "prisma migrate dev",
-    "prisma:migrate:deploy": "prisma migrate deploy",
-    "prisma:studio": "prisma studio",
-    "typecheck": "tsc --noEmit",
-    "db:seed": "prisma db seed",
-    "db:reset": "prisma migrate reset --force && prisma db seed"
-  },
-  "dependencies": {
-    "@nestjs/bullmq": "^11.0.4",
-    "@nestjs/cache-manager": "^3.1.0",
-    "@nestjs/common": "^11.0.1",
-    "@nestjs/config": "^4.0.4",
-    "@nestjs/core": "^11.0.1",
-    "@nestjs/event-emitter": "^3.0.1",
-    "@nestjs/platform-express": "^11.0.1",
-    "@nestjs/schedule": "^6.1.3",
-    "@nestjs/swagger": "^11.3.0",
-    "@nestjs/terminus": "^11.1.1",
-    "@nestjs/throttler": "^6.5.0",
-    "@opentelemetry/api": "^1.9.1",
-    "@opentelemetry/auto-instrumentations-node": "^0.73.0",
-    "@opentelemetry/exporter-metrics-otlp-http": "^0.215.0",
-    "@opentelemetry/exporter-trace-otlp-http": "^0.215.0",
-    "@opentelemetry/resources": "^2.7.0",
-    "@opentelemetry/sdk-metrics": "^2.7.0",
-    "@opentelemetry/sdk-node": "^0.215.0",
-    "@opentelemetry/semantic-conventions": "^1.40.0",
-    "@prisma/client": "^7.7.0",
-    "argon2": "^0.44.0",
-    "axios": "^1.15.0",
-    "bcryptjs": "^3.0.3",
-    "bullmq": "^5.74.1",
-    "cache-manager": "^7.2.8",
-    "class-transformer": "^0.5.1",
-    "class-validator": "^0.15.1",
-    "compression": "^1.8.1",
-    "cookie-parser": "^1.4.7",
-    "decimal.js": "^10.6.0",
-    "dotenv": "^17.4.2",
-    "firebase-admin": "^13.8.0",
-    "helmet": "^8.1.0",
-    "mercadopago": "^2.12.0",
-    "nanoid": "^5.1.9",
-    "nestjs-pino": "^4.6.1",
-    "opossum": "^9.0.0",
-    "pino": "^10.3.1",
-    "pino-http": "^11.0.0",
-    "pino-pretty": "^13.1.3",
-    "prom-client": "^15.1.3",
-    "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1",
-    "stripe": "^22.0.2",
-    "uuid": "^13.0.0",
-    "zod": "^4.3.6"
-  },
-  "devDependencies": {
-    "@eslint/eslintrc": "^3.2.0",
-    "@eslint/js": "^9.18.0",
-    "@nestjs/cli": "^11.0.0",
-    "@nestjs/schematics": "^11.0.0",
-    "@nestjs/testing": "^11.0.1",
-    "@types/bcryptjs": "^3.0.0",
-    "@types/cache-manager": "^5.0.0",
-    "@types/compression": "^1.8.1",
-    "@types/cookie-parser": "^1.4.10",
-    "@types/express": "^5.0.0",
-    "@types/jest": "^30.0.0",
-    "@types/k6": "^1.7.0",
-    "@types/node": "^25.6.0",
-    "@types/opossum": "^8.1.9",
-    "@types/supertest": "^6.0.2",
-    "@types/uuid": "^11.0.0",
-    "eslint": "^9.18.0",
-    "eslint-config-prettier": "^10.0.1",
-    "eslint-plugin-prettier": "^5.2.2",
-    "globals": "^16.0.0",
-    "ioredis": "^5.10.1",
-    "jest": "^30.0.0",
-    "prettier": "^3.4.2",
-    "prisma": "^7.7.0",
-    "source-map-support": "^0.5.21",
-    "supertest": "^7.0.0",
-    "ts-jest": "^29.2.5",
-    "ts-loader": "^9.5.2",
-    "ts-node": "^10.9.2",
-    "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.7.3",
-    "typescript-eslint": "^8.20.0"
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
-    },
-    "collectCoverageFrom": [
-      "**/*.(t|j)s"
-    ],
-    "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
-  },
-  "prisma": {
-    "seed": "ts-node prisma/seed.ts"
-  }
-}
-</file>
-
-<file path="prisma.config.ts">
-// This file was generated by Prisma, and assumes you have installed the following:
-// npm install --save-dev prisma dotenv
-import "dotenv/config";
-import { defineConfig } from "prisma/config";
-
-export default defineConfig({
-  schema: "prisma/schema.prisma",
-  migrations: {
-    path: "prisma/migrations",
-  },
-  datasource: {
-    url: process.env["DATABASE_URL"],
-  },
-});
-</file>
-
-<file path="prisma/migrations/20260419134827_init/migration.sql">
 -- CreateEnum
 CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'AUTHORIZED', 'CAPTURED', 'FAILED', 'CANCELLED', 'REFUNDED', 'PARTIALLY_REFUNDED');
 
@@ -775,9 +182,27 @@ CREATE TABLE "Tenant" (
 );
 
 -- CreateTable
+CREATE TABLE "TenantApiKey" (
+    "id" TEXT NOT NULL,
+    "tenantId" TEXT NOT NULL,
+    "label" TEXT NOT NULL,
+    "keyHash" TEXT NOT NULL,
+    "prefix" TEXT NOT NULL,
+    "active" BOOLEAN NOT NULL DEFAULT true,
+    "expiresAt" TIMESTAMP(3),
+    "revokedAt" TIMESTAMP(3),
+    "lastUsedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "TenantApiKey_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Customer" (
     "id" TEXT NOT NULL,
     "tenantId" TEXT NOT NULL,
+    "organizationId" TEXT NOT NULL,
     "externalId" TEXT NOT NULL,
     "email" TEXT,
     "country" TEXT,
@@ -790,6 +215,7 @@ CREATE TABLE "Customer" (
 CREATE TABLE "Payment" (
     "id" TEXT NOT NULL,
     "tenantId" TEXT NOT NULL,
+    "organizationId" TEXT NOT NULL,
     "customerId" TEXT,
     "idempotencyKey" TEXT NOT NULL,
     "amountMinor" BIGINT NOT NULL,
@@ -864,6 +290,24 @@ CREATE TABLE "ProviderRoute" (
     CONSTRAINT "ProviderRoute_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "AuditLog" (
+    "id" TEXT NOT NULL,
+    "tenantId" TEXT NOT NULL,
+    "organizationId" TEXT,
+    "actorId" TEXT,
+    "action" TEXT NOT NULL,
+    "resourceId" TEXT NOT NULL,
+    "resourceType" TEXT NOT NULL,
+    "before" JSONB,
+    "after" JSONB,
+    "metadata" JSONB,
+    "ip" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "AuditLog_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "Tenant_apiKeyHash_key" ON "Tenant"("apiKeyHash");
 
@@ -871,13 +315,25 @@ CREATE UNIQUE INDEX "Tenant_apiKeyHash_key" ON "Tenant"("apiKeyHash");
 CREATE INDEX "Tenant_active_idx" ON "Tenant"("active");
 
 -- CreateIndex
+CREATE INDEX "TenantApiKey_prefix_active_idx" ON "TenantApiKey"("prefix", "active");
+
+-- CreateIndex
+CREATE INDEX "TenantApiKey_tenantId_idx" ON "TenantApiKey"("tenantId");
+
+-- CreateIndex
 CREATE INDEX "Customer_email_idx" ON "Customer"("email");
+
+-- CreateIndex
+CREATE INDEX "Customer_organizationId_idx" ON "Customer"("organizationId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Customer_tenantId_externalId_key" ON "Customer"("tenantId", "externalId");
 
 -- CreateIndex
 CREATE INDEX "Payment_tenantId_status_createdAt_idx" ON "Payment"("tenantId", "status", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "Payment_organizationId_status_createdAt_idx" ON "Payment"("organizationId", "status", "createdAt");
 
 -- CreateIndex
 CREATE INDEX "Payment_providerId_externalId_idx" ON "Payment"("providerId", "externalId");
@@ -903,6 +359,18 @@ CREATE INDEX "ProviderRoute_country_currency_method_active_priority_idx" ON "Pro
 -- CreateIndex
 CREATE UNIQUE INDEX "ProviderRoute_country_currency_method_providerId_key" ON "ProviderRoute"("country", "currency", "method", "providerId");
 
+-- CreateIndex
+CREATE INDEX "AuditLog_tenantId_createdAt_idx" ON "AuditLog"("tenantId", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "AuditLog_organizationId_createdAt_idx" ON "AuditLog"("organizationId", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "AuditLog_resourceId_idx" ON "AuditLog"("resourceId");
+
+-- AddForeignKey
+ALTER TABLE "TenantApiKey" ADD CONSTRAINT "TenantApiKey_tenantId_fkey" FOREIGN KEY ("tenantId") REFERENCES "Tenant"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
 -- AddForeignKey
 ALTER TABLE "Customer" ADD CONSTRAINT "Customer_tenantId_fkey" FOREIGN KEY ("tenantId") REFERENCES "Tenant"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -917,96 +385,17 @@ ALTER TABLE "PaymentEvent" ADD CONSTRAINT "PaymentEvent_paymentId_fkey" FOREIGN 
 
 -- AddForeignKey
 ALTER TABLE "Refund" ADD CONSTRAINT "Refund_paymentId_fkey" FOREIGN KEY ("paymentId") REFERENCES "Payment"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-</file>
+```
 
-<file path="prisma/migrations/20260419210553_sprint_6/migration.sql">
--- CreateTable
-CREATE TABLE "TenantApiKey" (
-    "id" TEXT NOT NULL,
-    "tenantId" TEXT NOT NULL,
-    "label" TEXT NOT NULL,
-    "keyHash" TEXT NOT NULL,
-    "prefix" TEXT NOT NULL,
-    "active" BOOLEAN NOT NULL DEFAULT true,
-    "expiresAt" TIMESTAMP(3),
-    "revokedAt" TIMESTAMP(3),
-    "lastUsedAt" TIMESTAMP(3),
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "TenantApiKey_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "AuditLog" (
-    "id" TEXT NOT NULL,
-    "tenantId" TEXT NOT NULL,
-    "actorId" TEXT,
-    "action" TEXT NOT NULL,
-    "resourceId" TEXT NOT NULL,
-    "resourceType" TEXT NOT NULL,
-    "before" JSONB,
-    "after" JSONB,
-    "metadata" JSONB,
-    "ip" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "AuditLog_pkey" PRIMARY KEY ("id")
-);
-
--- CreateIndex
-CREATE INDEX "TenantApiKey_prefix_active_idx" ON "TenantApiKey"("prefix", "active");
-
--- CreateIndex
-CREATE INDEX "TenantApiKey_tenantId_idx" ON "TenantApiKey"("tenantId");
-
--- CreateIndex
-CREATE INDEX "AuditLog_tenantId_createdAt_idx" ON "AuditLog"("tenantId", "createdAt");
-
--- CreateIndex
-CREATE INDEX "AuditLog_resourceId_idx" ON "AuditLog"("resourceId");
-
--- AddForeignKey
-ALTER TABLE "TenantApiKey" ADD CONSTRAINT "TenantApiKey_tenantId_fkey" FOREIGN KEY ("tenantId") REFERENCES "Tenant"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-</file>
-
-<file path="prisma/migrations/20260427182755_sprint7/migration.sql">
--- CreateTable
-CREATE TABLE "User" (
-    "id" TEXT NOT NULL,
-    "tenantId" TEXT NOT NULL,
-    "firebaseUid" TEXT NOT NULL,
-    "email" TEXT,
-    "name" TEXT,
-    "role" TEXT NOT NULL DEFAULT 'viewer',
-    "active" BOOLEAN NOT NULL DEFAULT true,
-    "lastLoginAt" TIMESTAMP(3),
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
-);
-
--- CreateIndex
-CREATE UNIQUE INDEX "User_firebaseUid_key" ON "User"("firebaseUid");
-
--- CreateIndex
-CREATE INDEX "User_tenantId_idx" ON "User"("tenantId");
-
--- CreateIndex
-CREATE INDEX "User_firebaseUid_idx" ON "User"("firebaseUid");
-
--- AddForeignKey
-ALTER TABLE "User" ADD CONSTRAINT "User_tenantId_fkey" FOREIGN KEY ("tenantId") REFERENCES "Tenant"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-</file>
-
-<file path="prisma/migrations/migration_lock.toml">
+## File: prisma/migrations/migration_lock.toml
+```toml
 # Please do not edit this file manually
 # It should be added in your version-control system (e.g., Git)
 provider = "postgresql"
-</file>
+```
 
-<file path="prisma/schema.prisma">
+## File: prisma/schema.prisma
+```prisma
 // =============================================================================
 // prisma/schema.prisma — Sprint 8: organizationId SSO
 // =============================================================================
@@ -1142,7 +531,6 @@ model Payment {
   customer Customer?      @relation(fields: [customerId], references: [id])
   events   PaymentEvent[]
   refunds  Refund[]
-
   @@unique([tenantId, idempotencyKey])
   @@index([tenantId, status, createdAt])
   @@index([organizationId, status, createdAt])  // SSO: filtro principal
@@ -1246,9 +634,10 @@ model AuditLog {
   @@index([organizationId, createdAt])  // SSO: filtro principal
   @@index([resourceId])
 }
-</file>
+```
 
-<file path="prisma/seed.ts">
+## File: prisma/seed.ts
+```typescript
 import { PrismaClient, PaymentMethodKind } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { nanoid } from 'nanoid';
@@ -1323,216 +712,20 @@ async function main() {
 main()
   .catch(console.error)
   .finally(() => prisma.$disconnect());
-</file>
-
-<file path="README.md">
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
-
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
-
-```bash
-$ pnpm install
 ```
 
-## Compile and run the project
-
-```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
-```
-
-## Run tests
-
-```bash
-# unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
-</file>
-
-<file path="src/app.module.ts">
-// src/app.module.ts
-import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
-import { LoggerModule } from 'nestjs-pino';
-import { ThrottlerModule } from '@nestjs/throttler';
-import { ScheduleModule } from '@nestjs/schedule';
-import { EventEmitterModule } from '@nestjs/event-emitter';
-import { envSchema } from './config/env.validation';
-
-// Core
-import { PrismaModule }   from './modules/prisma/prisma.module';
-import { FirebaseModule } from './modules/firebase/firebase.module';
-import { RedisModule }    from './modules/redis/redis.module';
-import { QueueModule }    from './modules/queue/queue.module';
-import { AuditModule }    from './modules/audit/audit.module';
-import { MetricsModule }  from './modules/metrics/metrics.module';
-
-// Business
-import { AuthModule }      from './modules/auth/auth.module';
-import { PaymentsModule }  from './modules/payments/payments.module';
-import { WebhooksModule }  from './modules/webhooks/webhooks.module';
-import { TenantsModule }   from './modules/tenants/tenants.module';
-import { ProvidersModule } from './modules/providers/providers.module';
-import { HealthModule }    from './modules/health/health.module';
-
-// Guards globales
-import { TenantThrottlerGuard } from './common/guards/tenant-throttler.guard';
-
-@Module({
-  imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      validate: (config) => {
-        const result = envSchema.safeParse(config);
-        if (!result.success) {
-          throw new Error(
-            `Variables de entorno inválidas:\n${result.error.toString()}`,
-          );
-        }
-        return result.data;
-      },
-    }),
-
-    LoggerModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        pinoHttp: {
-          level:     config.get<string>('LOG_LEVEL') ?? 'info',
-          transport: config.get<string>('NODE_ENV') !== 'production'
-            ? { target: 'pino-pretty', options: { colorize: true } }
-            : undefined,
-          redact: ['req.headers.authorization', 'req.headers["x-api-key"]'],
-        },
-      }),
-    }),
-
-    ThrottlerModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        throttlers: [{
-          ttl:   config.get<number>('THROTTLE_TTL')   ?? 60,
-          limit: config.get<number>('THROTTLE_LIMIT') ?? 200,
-        }],
-      }),
-    }),
-
-    ScheduleModule.forRoot(),
-    EventEmitterModule.forRoot(),
-
-    // Core
-    PrismaModule,
-    FirebaseModule,
-    RedisModule,
-    QueueModule,
-    AuditModule,
-    MetricsModule,
-
-    // Business
-    AuthModule,
-    PaymentsModule,
-    WebhooksModule,
-    TenantsModule,
-    ProvidersModule,
-    HealthModule,
-  ],
-  providers: [
-    {
-      provide: APP_GUARD,
-      useClass: TenantThrottlerGuard,
-    },
-  ],
-})
-export class AppModule {}
-</file>
-
-<file path="src/common/constants/queues.ts">
+## File: src/common/constants/queues.ts
+```typescript
 export const QUEUE_WEBHOOKS   = 'webhooks:process';
 export const QUEUE_RECONCILE  = 'payments:reconcile';
 export const QUEUE_DLQ        = 'payments:dlq';
 
 export const JOB_PROCESS_WEBHOOK   = 'process-webhook';
 export const JOB_RECONCILE_PAYMENT = 'reconcile-payment';
-</file>
+```
 
-<file path="src/common/decorators/org.decorator.ts">
+## File: src/common/decorators/org.decorator.ts
+```typescript
 // src/common/decorators/org.decorator.ts
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import type { OrgContext } from '../interfaces/org-context.interface';
@@ -1551,15 +744,17 @@ export const OrgCtx = createParamDecorator(
     return request['orgContext'] as OrgContext;
   },
 );
-</file>
+```
 
-<file path="src/common/decorators/public.decorator.ts">
+## File: src/common/decorators/public.decorator.ts
+```typescript
 import { SetMetadata } from '@nestjs/common';
 export const IS_PUBLIC_KEY = 'isPublic';
 export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
-</file>
+```
 
-<file path="src/common/decorators/roles.decorator.ts">
+## File: src/common/decorators/roles.decorator.ts
+```typescript
 import { SetMetadata } from '@nestjs/common';
 
 /**
@@ -1578,9 +773,10 @@ export const ROLES_KEY = 'roles';
  * Ejemplo: @Roles('admin', 'operator')
  */
 export const Roles = (...roles: UserRole[]) => SetMetadata(ROLES_KEY, roles);
-</file>
+```
 
-<file path="src/common/decorators/tenant.decorator.ts">
+## File: src/common/decorators/tenant.decorator.ts
+```typescript
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
 export interface TenantContext {
@@ -1594,9 +790,10 @@ export const Tenant = createParamDecorator(
     return req['tenant'] as TenantContext;
   },
 );
-</file>
+```
 
-<file path="src/common/decorators/user.decorator.ts">
+## File: src/common/decorators/user.decorator.ts
+```typescript
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { UserRole } from './roles.decorator';
 
@@ -1615,9 +812,10 @@ export const User = createParamDecorator(
     return req['user'] as UserContext;
   },
 );
-</file>
+```
 
-<file path="src/common/errors/payment-error.catalog.ts">
+## File: src/common/errors/payment-error.catalog.ts
+```typescript
 /**
  * Catálogo centralizado de errores de pago.
  * Mapeo de códigos externos (Stripe, MP, etc.) a códigos internos.
@@ -1705,9 +903,10 @@ export const PAYMENT_ERROR_CATALOG: Record<PaymentErrorCode, PaymentErrorMeta> =
   [PaymentErrorCode.PROVIDER_TIMEOUT]:        { code: PaymentErrorCode.PROVIDER_TIMEOUT,        retryable: true,  httpStatus: 504, message: 'Timeout del provider' },
   [PaymentErrorCode.PROVIDER_UNKNOWN]:        { code: PaymentErrorCode.PROVIDER_UNKNOWN,        retryable: false, httpStatus: 502, message: 'Error desconocido del provider' },
 };
-</file>
+```
 
-<file path="src/common/errors/payment.exception.ts">
+## File: src/common/errors/payment.exception.ts
+```typescript
 import { HttpException } from '@nestjs/common';
 import {
   PaymentErrorCode,
@@ -1732,9 +931,10 @@ export class PaymentException extends HttpException {
     this.retryable = meta.retryable;
   }
 }
-</file>
+```
 
-<file path="src/common/filters/all-exceptions.filter.ts">
+## File: src/common/filters/all-exceptions.filter.ts
+```typescript
 import {
   ArgumentsHost,
   Catch,
@@ -1797,9 +997,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
     });
   }
 }
-</file>
+```
 
-<file path="src/common/guards/api-key.guard.ts">
+## File: src/common/guards/api-key.guard.ts
+```typescript
 import {
   CanActivate,
   ExecutionContext,
@@ -1845,9 +1046,10 @@ export class ApiKeyGuard implements CanActivate {
     return true;
   }
 }
-</file>
+```
 
-<file path="src/common/guards/auth.guard.ts">
+## File: src/common/guards/auth.guard.ts
+```typescript
 // src/common/guards/auth.guard.ts
 // Guard dual que acepta:
 //   1. Authorization: Bearer {firebaseToken}  → SSO del ecosistema
@@ -1923,9 +1125,10 @@ export class AuthGuard implements CanActivate {
     );
   }
 }
-</file>
+```
 
-<file path="src/common/guards/firebase-auth.guard.ts">
+## File: src/common/guards/firebase-auth.guard.ts
+```typescript
 // src/common/guards/firebase-auth.guard.ts
 // Guard idéntico al del owner-dashboard — mismo contrato, mismo FIREBASE_PROJECT_ID.
 import {
@@ -1977,14 +1180,14 @@ export class FirebaseAuthGuard implements CanActivate {
     try {
       const decoded = await this.firebase.auth().verifyIdToken(token, true);
 
-      // Inyectar en el request para uso por TenantGuard y decoradores
-      (request as Record<string, unknown>)['firebaseUser'] = decoded;
-      (request as Record<string, unknown>)['user'] = {
-        uid:   decoded.uid,
-        email: decoded.email ?? '',
+      // Tipado seguro gracias a src/common/types/express.d.ts
+      request.firebaseUser = decoded;
+      request.user = {
+        uid:                decoded.uid,
+        email:              decoded.email ?? '',
         // Claims custom del owner-dashboard
-        productPermissions: decoded['productPermissions'] ?? {},
-        organizations:      decoded['organizations'] ?? [],
+        productPermissions: (decoded['productPermissions'] as Record<string, { canRead: boolean; canWrite: boolean }>) ?? {},
+        organizations:      (decoded['organizations'] as string[]) ?? [],
       };
 
       return true;
@@ -1999,9 +1202,10 @@ export class FirebaseAuthGuard implements CanActivate {
     return type === 'Bearer' && token ? token : null;
   }
 }
-</file>
+```
 
-<file path="src/common/guards/pci.guard.ts">
+## File: src/common/guards/pci.guard.ts
+```typescript
 import {
   CanActivate,
   ExecutionContext,
@@ -2082,9 +1286,10 @@ export class PciGuard implements CanActivate {
     });
   }
 }
-</file>
+```
 
-<file path="src/common/guards/roles.guard.ts">
+## File: src/common/guards/roles.guard.ts
+```typescript
 import {
   CanActivate,
   ExecutionContext,
@@ -2128,9 +1333,10 @@ export class RolesGuard implements CanActivate {
     return true;
   }
 }
-</file>
+```
 
-<file path="src/common/guards/tenant-throttler.guard.ts">
+## File: src/common/guards/tenant-throttler.guard.ts
+```typescript
 import {
   ExecutionContext,
   Injectable,
@@ -2191,9 +1397,10 @@ export class TenantThrottlerGuard extends ThrottlerGuard {
     return true;
   }
 }
-</file>
+```
 
-<file path="src/common/guards/tenant.guard.ts">
+## File: src/common/guards/tenant.guard.ts
+```typescript
 // src/common/guards/tenant.guard.ts
 //
 // Valida:
@@ -2323,9 +1530,10 @@ export class TenantGuard implements CanActivate {
     return true;
   }
 }
-</file>
+```
 
-<file path="src/common/guards/write.guard.ts">
+## File: src/common/guards/write.guard.ts
+```typescript
 // src/common/guards/write.guard.ts
 // Usar en endpoints que crean/modifican datos.
 // Requiere que TenantGuard ya haya corrido (para tener orgContext).
@@ -2351,9 +1559,10 @@ export class WriteGuard implements CanActivate {
     return true;
   }
 }
-</file>
+```
 
-<file path="src/common/interceptors/idempotency.interceptor.ts">
+## File: src/common/interceptors/idempotency.interceptor.ts
+```typescript
 import {
   CallHandler,
   ConflictException,
@@ -2452,9 +1661,10 @@ export class IdempotencyInterceptor implements NestInterceptor {
     return crypto.createHash('sha256').update(data).digest('hex');
   }
 }
-</file>
+```
 
-<file path="src/common/interfaces/org-context.interface.ts">
+## File: src/common/interfaces/org-context.interface.ts
+```typescript
 // src/common/interfaces/org-context.interface.ts
 // Contexto inyectado por TenantGuard en cada request autenticado.
 export interface OrgContext {
@@ -2464,9 +1674,10 @@ export interface OrgContext {
   canWrite:       boolean;          // productPermissions["payments"].canWrite
   isApiKey:       boolean;          // true = path B2B, false = path SSO
 }
-</file>
+```
 
-<file path="src/common/services/pii.module.ts">
+## File: src/common/services/pii.module.ts
+```typescript
 import { Global, Module } from '@nestjs/common';
 import { PiiService } from './pii.service';
 
@@ -2476,9 +1687,10 @@ import { PiiService } from './pii.service';
   exports:   [PiiService],
 })
 export class PiiModule {}
-</file>
+```
 
-<file path="src/common/services/pii.service.ts">
+## File: src/common/services/pii.service.ts
+```typescript
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
@@ -2562,9 +1774,41 @@ export class PiiService implements OnModuleInit {
     return value.startsWith(this.VERSION);
   }
 }
-</file>
+```
 
-<file path="src/config/env.validation.ts">
+## File: src/common/types/express.d.ts
+```typescript
+// src/common/types/express.d.ts
+// Extiende el tipo Request de Express para los campos que inyectamos
+// en FirebaseAuthGuard y TenantGuard. Sin esto TypeScript emite TS2352.
+import type { DecodedIdToken } from 'firebase-admin/auth';
+
+declare global {
+  namespace Express {
+    interface Request {
+      firebaseUser?: DecodedIdToken;
+      user?: {
+        uid:                string;
+        email:              string;
+        productPermissions: Record<string, { canRead: boolean; canWrite: boolean }>;
+        organizations:      string[];
+      };
+      organizationId?: string;
+      tenantContext?: {
+        organizationId: string;
+        userId:         string;
+        canRead:        boolean;
+        canWrite:       boolean;
+      };
+    }
+  }
+}
+
+export {};
+```
+
+## File: src/config/env.validation.ts
+```typescript
 // src/config/env.validation.ts
 import { z } from 'zod';
 
@@ -2630,156 +1874,10 @@ export const envSchema = z.object({
 });
 
 export type Env = z.infer<typeof envSchema>;
-</file>
+```
 
-<file path="src/instrumentation.ts">
-/**
- * OpenTelemetry — debe importarse ANTES que cualquier otro módulo.
- *
- * Variables de entorno:
- *   OTEL_ENABLED=true
- *   OTEL_EXPORTER_OTLP_ENDPOINT  → ej: http://localhost:4318
- *   OTEL_SERVICE_NAME            → ej: pasarela-pagos
- */
-import { NodeSDK } from '@opentelemetry/sdk-node';
-import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
-import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
-import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
-import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
-
-// En @opentelemetry/resources v2 el export nombrado "Resource" puede no existir
-// según el entrypoint que resuelve el bundler con "module": "nodenext".
-// Lo importamos con require() desde el CJS para garantizar que es un valor,
-// con un fallback a objeto vacío si el entorno no tiene OTel configurado.
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const otelResources = require('@opentelemetry/resources');
-const ResourceClass  = otelResources.Resource ?? otelResources.default?.Resource ?? null;
-
-let sdk: NodeSDK | null = null;
-
-export function startTelemetry(): void {
-  if (process.env.OTEL_ENABLED !== 'true') return;
-  if (!ResourceClass) {
-    console.warn('[OTel] Resource no disponible — telemetría deshabilitada.');
-    return;
-  }
-
-  const resource = new ResourceClass({
-    [ATTR_SERVICE_NAME]:    process.env.OTEL_SERVICE_NAME ?? 'pasarela-pagos',
-    [ATTR_SERVICE_VERSION]: process.env.npm_package_version ?? '0.0.1',
-    environment:            process.env.NODE_ENV ?? 'development',
-  });
-
-  sdk = new NodeSDK({
-    resource,
-    traceExporter: new OTLPTraceExporter({
-      url: `${process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? 'http://localhost:4318'}/v1/traces`,
-    }),
-    metricReader: new PeriodicExportingMetricReader({
-      exporter: new OTLPMetricExporter({
-        url: `${process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? 'http://localhost:4318'}/v1/metrics`,
-      }),
-      exportIntervalMillis: 15_000,
-    }),
-    instrumentations: [
-      getNodeAutoInstrumentations({
-        '@opentelemetry/instrumentation-http':    { enabled: true },
-        '@opentelemetry/instrumentation-express': { enabled: true },
-        '@opentelemetry/instrumentation-pg':      { enabled: true },
-        '@opentelemetry/instrumentation-ioredis': { enabled: true },
-        '@opentelemetry/instrumentation-fs':      { enabled: false },
-      }),
-    ],
-  });
-
-  sdk.start();
-  console.log('[OTel] Telemetría iniciada.');
-}
-
-export async function stopTelemetry(): Promise<void> {
-  if (sdk) await sdk.shutdown();
-}
-</file>
-
-<file path="src/main.ts">
-// OTel DEBE ser el primer import — antes que cualquier módulo de NestJS
-import { startTelemetry, stopTelemetry } from './instrumentation';
-startTelemetry();
-
-import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, VersioningType, Logger } from '@nestjs/common';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { Logger as PinoLogger } from 'nestjs-pino';
-import helmet from 'helmet';
-import compression from 'compression';
-import cookieParser from 'cookie-parser';
-import * as express from 'express';
-import { AppModule } from './app.module';
-import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
-
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
-    bufferLogs: true,
-    rawBody: true,
-  });
-
-  app.useLogger(app.get(PinoLogger));
-
-  // Raw body solo para webhooks (para verificar firmas HMAC)
-  app.use('/api/v1/webhooks', express.raw({ type: '*/*', limit: '1mb' }));
-
-  app.use(helmet());
-  app.use(compression());
-  app.use(cookieParser());
-  app.use(express.json({ limit: '10mb' }));
-  app.use(express.urlencoded({ extended: true }));
-
-  app.enableCors({
-    origin: (process.env.CORS_ORIGINS ?? '').split(',').filter(Boolean),
-    credentials: true,
-  });
-
-  app.setGlobalPrefix('api');
-  app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' });
-
-  // Graceful shutdown: espera que las conexiones activas terminen
-  app.enableShutdownHooks();
-
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-      transformOptions: { enableImplicitConversion: true },
-    }),
-  );
-
-  app.useGlobalFilters(new AllExceptionsFilter());
-
-  if (process.env.NODE_ENV !== 'production') {
-    const swagger = new DocumentBuilder()
-      .setTitle('Pasarela de Pagos')
-      .setDescription('API multi-provider multi-tenant — Sprint 5')
-      .setVersion('1.0')
-      .addApiKey({ type: 'apiKey', in: 'header', name: 'x-api-key' }, 'x-api-key')
-      .build();
-    SwaggerModule.setup('docs', app, SwaggerModule.createDocument(app, swagger));
-  }
-
-  const port = Number(process.env.PORT ?? 3000);
-  await app.listen(port);
-
-  const logger = new Logger('Bootstrap');
-  logger.log(`🚀 App corriendo en puerto ${port}`);
-  logger.log(`📖 Docs: http://localhost:${port}/docs`);
-  logger.log(`💚 Health: http://localhost:${port}/api/v1/health/ready`);
-}
-
-void bootstrap();
-</file>
-
-<file path="src/modules/audit/audit.module.ts">
+## File: src/modules/audit/audit.module.ts
+```typescript
 import { Global, Module } from '@nestjs/common';
 import { AuditService } from './audit.service';
 
@@ -2789,14 +1887,16 @@ import { AuditService } from './audit.service';
   exports:   [AuditService],
 })
 export class AuditModule {}
-</file>
+```
 
-<file path="src/modules/audit/audit.service.ts">
+## File: src/modules/audit/audit.service.ts
+```typescript
 // src/modules/audit/audit.service.ts
 // Audit log inmutable (append-only).
 // Nunca se borran ni modifican registros — compliance PCI-DSS.
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 
 export type AuditAction =
   | 'payment.created'
@@ -2812,16 +1912,16 @@ export type AuditAction =
   | 'tenant.created';
 
 export interface AuditEntry {
-  tenantId:       string;
+  tenantId:        string;
   organizationId?: string;
-  actorId?:       string;
-  action:         AuditAction;
-  resourceId:     string;
-  resourceType:   string;
-  before?:        Record<string, unknown>;
-  after?:         Record<string, unknown>;
-  metadata?:      Record<string, unknown>;
-  ip?:            string;
+  actorId?:        string;
+  action:          AuditAction;
+  resourceId:      string;
+  resourceType:    string;
+  before?:         Record<string, unknown>;
+  after?:          Record<string, unknown>;
+  metadata?:       Record<string, unknown>;
+  ip?:             string;
 }
 
 @Injectable()
@@ -2832,20 +1932,24 @@ export class AuditService {
 
   async log(entry: AuditEntry): Promise<void> {
     try {
-      await this.prisma.auditLog.create({
-        data: {
-          tenantId:     entry.tenantId,
-          organizationId: entry.organizationId ?? entry.tenantId,
-          actorId:      entry.actorId,
-          action:       entry.action,
-          resourceId:   entry.resourceId,
-          resourceType: entry.resourceType,
-          before:       entry.before   as any,
-          after:        entry.after    as any,
-          metadata:     entry.metadata as any,
-          ip:           entry.ip,
-        },
-      });
+      // organizationId es un campo del schema Sprint-8.
+      // Si el cliente Prisma ya fue regenerado tras la migración, el campo
+      // está disponible directamente. El cast `as Prisma.AuditLogCreateInput`
+      // permite compilar antes de que la migración esté aplicada.
+      const data = {
+        tenantId:       entry.tenantId,
+        organizationId: entry.organizationId ?? entry.tenantId,
+        actorId:        entry.actorId,
+        action:         entry.action,
+        resourceId:     entry.resourceId,
+        resourceType:   entry.resourceType,
+        before:         entry.before   as Prisma.InputJsonValue | undefined,
+        after:          entry.after    as Prisma.InputJsonValue | undefined,
+        metadata:       entry.metadata as Prisma.InputJsonValue | undefined,
+        ip:             entry.ip,
+      } as Prisma.AuditLogCreateInput;
+
+      await this.prisma.auditLog.create({ data });
     } catch (err) {
       // El audit log NUNCA debe romper el flujo principal
       this.logger.error(`Error al escribir audit log: ${err}`);
@@ -2854,7 +1958,8 @@ export class AuditService {
 
   async findByOrg(organizationId: string, limit = 100) {
     return this.prisma.auditLog.findMany({
-      where:   { organizationId },
+      // organizationId disponible post-migración sprint8
+      where:   { organizationId } as Prisma.AuditLogWhereInput,
       orderBy: { createdAt: 'desc' },
       take:    limit,
     });
@@ -2862,14 +1967,15 @@ export class AuditService {
 
   async findByResource(resourceId: string, organizationId: string) {
     return this.prisma.auditLog.findMany({
-      where:   { resourceId, organizationId },
+      where:   { resourceId, organizationId } as Prisma.AuditLogWhereInput,
       orderBy: { createdAt: 'asc' },
     });
   }
 }
-</file>
+```
 
-<file path="src/modules/auth/auth.controller.ts">
+## File: src/modules/auth/auth.controller.ts
+```typescript
 // src/modules/auth/auth.controller.ts
 // Este sistema NO gestiona users ni orgs — eso lo hace el owner-dashboard.
 // Solo expone endpoints de utilidad para el contexto SSO.
@@ -2941,9 +2047,10 @@ export class AuthController {
     };
   }
 }
-</file>
+```
 
-<file path="src/modules/auth/auth.module.ts">
+## File: src/modules/auth/auth.module.ts
+```typescript
 // src/modules/auth/auth.module.ts
 import { Module } from '@nestjs/common';
 import { AuthController } from './auth.controller';
@@ -2957,9 +2064,10 @@ import { FirebaseAuthService } from '../firebase/firebase-auth.service';
   exports:     [FirebaseAuthService],
 })
 export class AuthModule {}
-</file>
+```
 
-<file path="src/modules/firebase/firebase-auth.service.ts">
+## File: src/modules/firebase/firebase-auth.service.ts
+```typescript
 // src/modules/firebase/firebase-auth.service.ts
 import {
   Inject,
@@ -3022,9 +2130,10 @@ export class FirebaseAuthService {
     }
   }
 }
-</file>
+```
 
-<file path="src/modules/firebase/firebase.module.ts">
+## File: src/modules/firebase/firebase.module.ts
+```typescript
 // src/modules/firebase/firebase.module.ts
 // Patrón idéntico al owner-dashboard — mismo FIREBASE_PROJECT_ID compartido.
 import { Global, Logger, Module } from '@nestjs/common';
@@ -3077,9 +2186,10 @@ export const FIREBASE_ADMIN = 'FIREBASE_ADMIN';
   exports: [FIREBASE_ADMIN],
 })
 export class FirebaseModule {}
-</file>
+```
 
-<file path="src/modules/health/health.controller.ts">
+## File: src/modules/health/health.controller.ts
+```typescript
 import { Controller, Get } from '@nestjs/common';
 import {
   HealthCheck,
@@ -3152,9 +2262,10 @@ export class HealthController {
     return this.ready();
   }
 }
-</file>
+```
 
-<file path="src/modules/health/health.module.ts">
+## File: src/modules/health/health.module.ts
+```typescript
 import { Module } from '@nestjs/common';
 import { TerminusModule } from '@nestjs/terminus';
 import { HealthController } from './health.controller';
@@ -3164,9 +2275,10 @@ import { HealthController } from './health.controller';
   controllers: [HealthController],
 })
 export class HealthModule {}
-</file>
+```
 
-<file path="src/modules/metrics/metrics.module.ts">
+## File: src/modules/metrics/metrics.module.ts
+```typescript
 import { Global, Module } from '@nestjs/common';
 import { MetricsService } from './metrics.service';
 
@@ -3176,9 +2288,10 @@ import { MetricsService } from './metrics.service';
   exports:   [MetricsService],
 })
 export class MetricsModule {}
-</file>
+```
 
-<file path="src/modules/metrics/metrics.service.ts">
+## File: src/modules/metrics/metrics.service.ts
+```typescript
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { metrics } from '@opentelemetry/api';
 import { Counter, Histogram, UpDownCounter } from '@opentelemetry/api';
@@ -3267,9 +2380,10 @@ export class MetricsService implements OnModuleInit {
   incrementPending(country: string)  { this.activePending.add( 1, { country }); }
   decrementPending(country: string)  { this.activePending.add(-1, { country }); }
 }
-</file>
+```
 
-<file path="src/modules/payments/dto/create-payment.dto.ts">
+## File: src/modules/payments/dto/create-payment.dto.ts
+```typescript
 import {
   IsEmail,
   IsEnum,
@@ -3330,9 +2444,10 @@ export class CreatePaymentDto {
   @IsObject()
   metadata?: Record<string, string>;
 }
-</file>
+```
 
-<file path="src/modules/payments/dto/list-payments.dto.ts">
+## File: src/modules/payments/dto/list-payments.dto.ts
+```typescript
 import { IsEnum, IsInt, IsOptional, Max, Min } from 'class-validator';
 import { PaymentStatus } from '@prisma/client';
 import { ApiPropertyOptional } from '@nestjs/swagger';
@@ -3356,9 +2471,10 @@ export class ListPaymentsDto {
   @Max(100)
   limit?: number = 20;
 }
-</file>
+```
 
-<file path="src/modules/payments/payment-state.machine.ts">
+## File: src/modules/payments/payment-state.machine.ts
+```typescript
 import { BadRequestException } from '@nestjs/common';
 import { PaymentStatus } from '@prisma/client';
 
@@ -3418,9 +2534,10 @@ export function assertValidTransition(
 export function isTerminal(status: PaymentStatus): boolean {
   return VALID_TRANSITIONS[status]?.length === 0;
 }
-</file>
+```
 
-<file path="src/modules/payments/payments.controller.ts">
+## File: src/modules/payments/payments.controller.ts
+```typescript
 // src/modules/payments/payments.controller.ts
 import {
   Body,
@@ -3491,9 +2608,10 @@ export class PaymentsController {
     return this.payments.refund(id, body, ctx);
   }
 }
-</file>
+```
 
-<file path="src/modules/payments/payments.module.ts">
+## File: src/modules/payments/payments.module.ts
+```typescript
 // src/modules/payments/payments.module.ts
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
@@ -3518,13 +2636,13 @@ import { QUEUE_RECONCILE } from '../../common/constants/queues';
   exports: [PaymentsService],
 })
 export class PaymentsModule {}
-</file>
+```
 
-<file path="src/modules/payments/payments.service.ts">
+## File: src/modules/payments/payments.service.ts
+```typescript
 // src/modules/payments/payments.service.ts
 import {
   BadRequestException,
-  ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
@@ -3536,7 +2654,29 @@ import { MetricsService } from '../metrics/metrics.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { assertValidTransition } from './payment-state.machine';
 import type { OrgContext } from '../../common/interfaces/org-context.interface';
-import { PaymentStatus, PaymentMethodKind } from '@prisma/client';
+import { PaymentStatus, Prisma } from '@prisma/client';
+// Importamos el enum de Prisma con alias para no colisionar con el tipo del provider
+import { PaymentMethodKind as PrismaPaymentMethodKind } from '@prisma/client';
+import type { PaymentMethodKind as ProviderMethodKind } from '../providers/provider.interface';
+
+// ---------------------------------------------------------------------------
+// Mapper: convierte el value lowercase del provider al ENUM de Prisma
+// Ejemplo: 'card' → PaymentMethodKind.CARD
+// ---------------------------------------------------------------------------
+const METHOD_MAP: Record<ProviderMethodKind, PrismaPaymentMethodKind> = {
+  card:          PrismaPaymentMethodKind.CARD,
+  wallet:        PrismaPaymentMethodKind.WALLET,
+  bank_transfer: PrismaPaymentMethodKind.BANK_TRANSFER,
+  cash_voucher:  PrismaPaymentMethodKind.CASH_VOUCHER,
+  pix:           PrismaPaymentMethodKind.PIX,
+  qr:            PrismaPaymentMethodKind.QR,
+};
+
+function toPrismaMethod(method: string): PrismaPaymentMethodKind {
+  const mapped = METHOD_MAP[method as ProviderMethodKind];
+  if (!mapped) throw new BadRequestException(`Método de pago inválido: ${method}`);
+  return mapped;
+}
 
 @Injectable()
 export class PaymentsService {
@@ -3549,9 +2689,9 @@ export class PaymentsService {
     private readonly metrics:  MetricsService,
   ) {}
 
-  // -------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   // CREATE
-  // -------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   async create(
     dto: CreatePaymentDto,
     idempotencyKey: string,
@@ -3571,7 +2711,7 @@ export class PaymentsService {
       where: {
         organizationId: orgId,
         idempotencyKey,
-      },
+      } as Prisma.PaymentWhereInput,
     });
     if (existing) return this.serialize(existing);
 
@@ -3585,10 +2725,15 @@ export class PaymentsService {
 
     this.metrics.incrementPending(dto.country);
 
+    const prismaMethod = toPrismaMethod(dto.method);
+
     // 3. Crear Payment PENDING en DB
     const payment = await this.prisma.$transaction(async (tx) => {
       let customerId: string | undefined;
+
       if (dto.customerId) {
+        // Usar UncheckedCreateInput: permite pasar tenantId/organizationId
+        // como scalars sin necesitar el objeto de relación anidado.
         const customer = await tx.customer.upsert({
           where: {
             tenantId_externalId: {
@@ -3603,7 +2748,7 @@ export class PaymentsService {
             externalId:     dto.customerId,
             email:          dto.email,
             country:        dto.country,
-          },
+          } satisfies Prisma.CustomerUncheckedCreateInput,
         });
         customerId = customer.id;
       }
@@ -3616,27 +2761,27 @@ export class PaymentsService {
           amountMinor:    BigInt(dto.amountMinor),
           currency:       dto.currency,
           country:        dto.country,
-          method:         dto.method as PaymentMethodKind,
+          method:         prismaMethod,
           status:         PaymentStatus.PENDING,
           providerId:     provider.id,
           description:    dto.description,
-          metadata:       dto.metadata,
+          metadata:       dto.metadata as Prisma.InputJsonValue,
           ...(customerId ? { customerId } : {}),
-        },
+        } satisfies Prisma.PaymentUncheckedCreateInput,
       });
 
       await tx.paymentEvent.create({
         data: {
           paymentId: p.id,
           type:      'payment.created',
-          payload:   { providerId: provider.id, organizationId: orgId },
+          payload:   { providerId: provider.id, organizationId: orgId } satisfies Prisma.InputJsonValue,
         },
       });
 
       return p;
     });
 
-    // 4. Llamar provider
+    // 4. Llamar provider — usa el tipo lowercase del provider interface
     try {
       const result = await provider.createCharge({
         amountMinor:   BigInt(dto.amountMinor),
@@ -3644,7 +2789,7 @@ export class PaymentsService {
         country:       dto.country,
         customer:      { id: dto.customerId ?? payment.id, email: dto.email },
         description:   dto.description,
-        method:        dto.method as any,
+        method:        dto.method as ProviderMethodKind,
         idempotencyKey,
         returnUrl:     dto.returnUrl,
         metadata:      dto.metadata,
@@ -3661,7 +2806,7 @@ export class PaymentsService {
           data: {
             paymentId: payment.id,
             type:      `provider.${result.status}`,
-            payload:   result.raw as Record<string, unknown>,
+            payload:   result.raw as Prisma.InputJsonValue,
           },
         });
         return p;
@@ -3701,9 +2846,9 @@ export class PaymentsService {
     }
   }
 
-  // -------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   // LIST — siempre filtrado por organizationId
-  // -------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   async findAll(
     ctx: OrgContext,
     query: { status?: PaymentStatus; page?: number; limit?: number },
@@ -3715,7 +2860,7 @@ export class PaymentsService {
     const where = {
       organizationId: ctx.organizationId,
       ...(query.status ? { status: query.status } : {}),
-    };
+    } as Prisma.PaymentWhereInput;
 
     const [items, total] = await this.prisma.$transaction([
       this.prisma.payment.findMany({
@@ -3728,17 +2873,17 @@ export class PaymentsService {
     ]);
 
     return {
-      data:  items.map((p) => this.serialize(p)),
-      meta:  { total, page, limit, pages: Math.ceil(total / limit) },
+      data: items.map((p) => this.serialize(p)),
+      meta: { total, page, limit, pages: Math.ceil(total / limit) },
     };
   }
 
-  // -------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   // FIND ONE — validar que pertenece a la org
-  // -------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   async findOne(id: string, ctx: OrgContext) {
     const payment = await this.prisma.payment.findFirst({
-      where: { id, organizationId: ctx.organizationId },
+      where:   { id, organizationId: ctx.organizationId } as Prisma.PaymentWhereInput,
       include: { events: { orderBy: { createdAt: 'asc' } } },
     });
 
@@ -3752,24 +2897,26 @@ export class PaymentsService {
     };
   }
 
-  // -------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   // REFUND
-  // -------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   async refund(
     id: string,
     body: { amountMinor?: number; reason?: string },
     ctx: OrgContext,
   ) {
     const payment = await this.prisma.payment.findFirst({
-      where: { id, organizationId: ctx.organizationId },
+      where: { id, organizationId: ctx.organizationId } as Prisma.PaymentWhereInput,
     });
 
     if (!payment) {
       throw new NotFoundException(`Payment ${id} no encontrado`);
     }
 
-    if (payment.status !== PaymentStatus.CAPTURED &&
-        payment.status !== PaymentStatus.PARTIALLY_REFUNDED) {
+    if (
+      payment.status !== PaymentStatus.CAPTURED &&
+      payment.status !== PaymentStatus.PARTIALLY_REFUNDED
+    ) {
       throw new BadRequestException(
         `No se puede refundar un pago en estado ${payment.status}`,
       );
@@ -3787,10 +2934,10 @@ export class PaymentsService {
       reason:      body.reason,
     });
 
-    const newStatus = body.amountMinor &&
-      BigInt(body.amountMinor) < payment.amountMinor
-      ? PaymentStatus.PARTIALLY_REFUNDED
-      : PaymentStatus.REFUNDED;
+    const newStatus =
+      body.amountMinor && BigInt(body.amountMinor) < payment.amountMinor
+        ? PaymentStatus.PARTIALLY_REFUNDED
+        : PaymentStatus.REFUNDED;
 
     assertValidTransition(payment.status, newStatus);
 
@@ -3798,6 +2945,18 @@ export class PaymentsService {
       const p = await tx.payment.update({
         where: { id: payment.id },
         data:  { status: newStatus },
+      });
+
+      await tx.paymentEvent.create({
+        data: {
+          paymentId: payment.id,
+          type:      'payment.refunded',
+          payload:   {
+            refundId: result.externalRefundId,
+            amount:   body.amountMinor ?? payment.amountMinor.toString(),
+            reason:   body.reason,
+          } as Prisma.InputJsonValue,
+        },
       });
 
       const r = await tx.refund.create({
@@ -3808,23 +2967,15 @@ export class PaymentsService {
             : payment.amountMinor,
           reason:           body.reason,
           externalRefundId: result.externalRefundId,
-          status:           result.status,
+          status:           'REFUNDED',
         },
       });
 
-      await tx.paymentEvent.create({
-        data: {
-          paymentId: payment.id,
-          type:      'payment.refunded',
-          payload:   { refundId: r.id, status: result.status },
-        },
-      });
-
-      return [p, r];
+      return [p, r] as const;
     });
 
     await this.audit.log({
-      tenantId:       ctx.organizationId,
+      tenantId:       payment.tenantId,
       organizationId: ctx.organizationId,
       actorId:        ctx.userId,
       action:         'payment.refunded',
@@ -3835,39 +2986,61 @@ export class PaymentsService {
     });
 
     return {
-      payment: this.serialize(updatedPayment),
+      ...this.serialize(updatedPayment),
       refund: {
-        ...refund,
-        amountMinor: refund.amountMinor.toString(),
+        id:               refund.id,
+        amountMinor:      refund.amountMinor.toString(),
+        externalRefundId: refund.externalRefundId,
+        status:           refund.status,
       },
     };
   }
 
-  // -------------------------------------------------------------------------
-  // Helpers
-  // -------------------------------------------------------------------------
-  serialize(p: { amountMinor: bigint; [key: string]: unknown }) {
+  // ---------------------------------------------------------------------------
+  // HELPERS
+  // ---------------------------------------------------------------------------
+  private serialize(payment: {
+    id:              string;
+    tenantId:        string;
+    amountMinor:     bigint;
+    currency:        string;
+    country:         string;
+    method:          PrismaPaymentMethodKind;
+    status:          PaymentStatus;
+    providerId:      string;
+    externalId?:     string | null;
+    description?:    string | null;
+    metadata?:       unknown;
+    failureCode?:    string | null;
+    failureMessage?: string | null;
+    idempotencyKey:  string;
+    customerId?:     string | null;
+    createdAt:       Date;
+    updatedAt:       Date;
+    [key: string]:   unknown;
+  }) {
     return {
-      ...p,
-      amountMinor: p.amountMinor.toString(),
+      ...payment,
+      // BigInt serializado como string — contrato del ecosistema
+      amountMinor: payment.amountMinor.toString(),
     };
   }
 
-  private mapProviderStatus(s: string): PaymentStatus {
+  private mapProviderStatus(status: string): PaymentStatus {
     const map: Record<string, PaymentStatus> = {
-      pending:    PaymentStatus.PENDING,
       authorized: PaymentStatus.AUTHORIZED,
       captured:   PaymentStatus.CAPTURED,
       failed:     PaymentStatus.FAILED,
       cancelled:  PaymentStatus.CANCELLED,
-      refunded:   PaymentStatus.REFUNDED,
+      pending:    PaymentStatus.PENDING,
     };
-    return map[s] ?? PaymentStatus.PENDING;
+    return map[status] ?? PaymentStatus.PENDING;
   }
 }
-</file>
+```
 
-<file path="src/modules/payments/reconcile.processor.ts">
+## File: src/modules/payments/reconcile.processor.ts
+```typescript
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
@@ -3887,9 +3060,10 @@ export class ReconcileProcessor extends WorkerHost {
     await this.reconciliation.reconcileOne(job.data.paymentId);
   }
 }
-</file>
+```
 
-<file path="src/modules/payments/reconciliation.service.ts">
+## File: src/modules/payments/reconciliation.service.ts
+```typescript
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -4020,9 +3194,10 @@ export class ReconciliationService {
     );
   }
 }
-</file>
+```
 
-<file path="src/modules/prisma/prisma.module.ts">
+## File: src/modules/prisma/prisma.module.ts
+```typescript
 import { Global, Module } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
 
@@ -4032,9 +3207,10 @@ import { PrismaService } from './prisma.service';
   exports: [PrismaService],
 })
 export class PrismaModule {}
-</file>
+```
 
-<file path="src/modules/prisma/prisma.service.ts">
+## File: src/modules/prisma/prisma.service.ts
+```typescript
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 
@@ -4047,9 +3223,10 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     await this.$disconnect();
   }
 }
-</file>
+```
 
-<file path="src/modules/providers/adapters/conekta/conekta-error.mapper.ts">
+## File: src/modules/providers/adapters/conekta/conekta-error.mapper.ts
+```typescript
 import { PaymentErrorCode } from '../../../../common/errors/payment-error.catalog';
 import { PaymentException } from '../../../../common/errors/payment.exception';
 
@@ -4076,9 +3253,10 @@ export function mapConektaError(error: any): never {
   const internalCode = CODE_MAP[firstCode] ?? PaymentErrorCode.PROVIDER_UNKNOWN;
   throw new PaymentException(internalCode, details[0]?.message ?? error?.message);
 }
-</file>
+```
 
-<file path="src/modules/providers/adapters/conekta/conekta.module.ts">
+## File: src/modules/providers/adapters/conekta/conekta.module.ts
+```typescript
 import { Module } from '@nestjs/common';
 import { ConektaProvider } from './conekta.provider';
 
@@ -4087,9 +3265,10 @@ import { ConektaProvider } from './conekta.provider';
   exports: [ConektaProvider],
 })
 export class ConektaModule {}
-</file>
+```
 
-<file path="src/modules/providers/adapters/conekta/conekta.provider.ts">
+## File: src/modules/providers/adapters/conekta/conekta.provider.ts
+```typescript
 import { Injectable, Logger, OnModuleInit, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance } from 'axios';
@@ -4290,9 +3469,10 @@ export class ConektaProvider implements PaymentProvider, OnModuleInit {
     return map[s] ?? 'pending';
   }
 }
-</file>
+```
 
-<file path="src/modules/providers/adapters/dlocal/dlocal-error.mapper.ts">
+## File: src/modules/providers/adapters/dlocal/dlocal-error.mapper.ts
+```typescript
 import { PaymentErrorCode } from '../../../../common/errors/payment-error.catalog';
 import { PaymentException } from '../../../../common/errors/payment.exception';
 
@@ -4322,9 +3502,10 @@ export function mapDlocalError(error: any): never {
   const internal  = CODE_MAP[code] ?? PaymentErrorCode.PROVIDER_UNKNOWN;
   throw new PaymentException(internal, error?.response?.data?.message);
 }
-</file>
+```
 
-<file path="src/modules/providers/adapters/dlocal/dlocal.module.ts">
+## File: src/modules/providers/adapters/dlocal/dlocal.module.ts
+```typescript
 import { Module } from '@nestjs/common';
 import { DlocalProvider } from './dlocal.provider';
 
@@ -4333,9 +3514,10 @@ import { DlocalProvider } from './dlocal.provider';
   exports: [DlocalProvider],
 })
 export class DlocalModule {}
-</file>
+```
 
-<file path="src/modules/providers/adapters/dlocal/dlocal.provider.ts">
+## File: src/modules/providers/adapters/dlocal/dlocal.provider.ts
+```typescript
 import { Injectable, Logger, OnModuleInit, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance } from 'axios';
@@ -4555,9 +3737,10 @@ export class DlocalProvider implements PaymentProvider, OnModuleInit {
     return COUNTRY_METHODS[country]?.[method] ?? 'VI';
   }
 }
-</file>
+```
 
-<file path="src/modules/providers/adapters/fake/fake.module.ts">
+## File: src/modules/providers/adapters/fake/fake.module.ts
+```typescript
 import { Module } from '@nestjs/common';
 import { FakeProvider } from './fake.provider';
 
@@ -4565,9 +3748,10 @@ import { FakeProvider } from './fake.provider';
   providers: [FakeProvider],
 })
 export class FakeModule {}
-</file>
+```
 
-<file path="src/modules/providers/adapters/fake/fake.provider.ts">
+## File: src/modules/providers/adapters/fake/fake.provider.ts
+```typescript
 import { Injectable, Logger, OnModuleInit, UnauthorizedException } from '@nestjs/common';
 import * as crypto from 'crypto';
 import {
@@ -4655,9 +3839,10 @@ export class FakeProvider implements PaymentProvider, OnModuleInit {
     };
   }
 }
-</file>
+```
 
-<file path="src/modules/providers/adapters/mercadopago/mercadopago-error.mapper.ts">
+## File: src/modules/providers/adapters/mercadopago/mercadopago-error.mapper.ts
+```typescript
 import { PaymentErrorCode } from '../../../../common/errors/payment-error.catalog';
 import { PaymentException } from '../../../../common/errors/payment.exception';
 
@@ -4696,9 +3881,10 @@ export function mapMercadoPagoError(statusDetail: string, httpStatus?: number): 
   const code = STATUS_DETAIL_MAP[statusDetail] ?? PaymentErrorCode.CARD_DECLINED;
   throw new PaymentException(code, statusDetail);
 }
-</file>
+```
 
-<file path="src/modules/providers/adapters/mercadopago/mercadopago.module.ts">
+## File: src/modules/providers/adapters/mercadopago/mercadopago.module.ts
+```typescript
 import { Module } from '@nestjs/common';
 import { MercadoPagoProvider } from './mercadopago.provider';
 
@@ -4707,9 +3893,10 @@ import { MercadoPagoProvider } from './mercadopago.provider';
   exports: [MercadoPagoProvider],
 })
 export class MercadoPagoModule {}
-</file>
+```
 
-<file path="src/modules/providers/adapters/mercadopago/mercadopago.provider.ts">
+## File: src/modules/providers/adapters/mercadopago/mercadopago.provider.ts
+```typescript
 import {
   Injectable,
   Logger,
@@ -4930,9 +4117,10 @@ export class MercadoPagoProvider implements PaymentProvider, OnModuleInit {
     }
   }
 }
-</file>
+```
 
-<file path="src/modules/providers/adapters/pagarme/pagarme-error.mapper.ts">
+## File: src/modules/providers/adapters/pagarme/pagarme-error.mapper.ts
+```typescript
 import { PaymentErrorCode } from '../../../../common/errors/payment-error.catalog';
 import { PaymentException } from '../../../../common/errors/payment.exception';
 
@@ -4963,9 +4151,10 @@ export function mapPagarmeError(error: any): never {
   const internalCode = CODE_MAP[firstCode] ?? PaymentErrorCode.PROVIDER_UNKNOWN;
   throw new PaymentException(internalCode, errors[0]?.message);
 }
-</file>
+```
 
-<file path="src/modules/providers/adapters/pagarme/pagarme.module.ts">
+## File: src/modules/providers/adapters/pagarme/pagarme.module.ts
+```typescript
 import { Module } from '@nestjs/common';
 import { PagarmeProvider } from './pagarme.provider';
 
@@ -4974,9 +4163,10 @@ import { PagarmeProvider } from './pagarme.provider';
   exports: [PagarmeProvider],
 })
 export class PagarmeModule {}
-</file>
+```
 
-<file path="src/modules/providers/adapters/pagarme/pagarme.provider.ts">
+## File: src/modules/providers/adapters/pagarme/pagarme.provider.ts
+```typescript
 import { Injectable, Logger, OnModuleInit, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance } from 'axios';
@@ -5194,9 +4384,10 @@ export class PagarmeProvider implements PaymentProvider, OnModuleInit {
     return map[s] ?? 'pending';
   }
 }
-</file>
+```
 
-<file path="src/modules/providers/adapters/stripe/stripe-error.mapper.ts">
+## File: src/modules/providers/adapters/stripe/stripe-error.mapper.ts
+```typescript
 import Stripe from 'stripe';
 import { PaymentErrorCode } from '../../../../common/errors/payment-error.catalog';
 import { PaymentException } from '../../../../common/errors/payment.exception';
@@ -5262,9 +4453,10 @@ export function mapStripeError(err: unknown): never {
   const message = err instanceof Error ? err.message : String(err);
   throw new PaymentException(PaymentErrorCode.PROVIDER_UNKNOWN, message);
 }
-</file>
+```
 
-<file path="src/modules/providers/adapters/stripe/stripe.module.ts">
+## File: src/modules/providers/adapters/stripe/stripe.module.ts
+```typescript
 import { Module } from '@nestjs/common';
 import { StripeProvider } from './stripe.provider';
 import { CircuitBreakerService } from '../../circuit-breaker.service';
@@ -5274,9 +4466,10 @@ import { CircuitBreakerService } from '../../circuit-breaker.service';
   exports: [StripeProvider],
 })
 export class StripeModule {}
-</file>
+```
 
-<file path="src/modules/providers/adapters/stripe/stripe.provider.ts">
+## File: src/modules/providers/adapters/stripe/stripe.provider.ts
+```typescript
 import { Injectable, Logger, OnModuleInit, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
@@ -5489,9 +4682,10 @@ export class StripeProvider implements PaymentProvider, OnModuleInit {
     return reason ? (map[reason] ?? 'requested_by_customer') : undefined;
   }
 }
-</file>
+```
 
-<file path="src/modules/providers/circuit-breaker.service.ts">
+## File: src/modules/providers/circuit-breaker.service.ts
+```typescript
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import CircuitBreaker from 'opossum';
 import { PaymentException } from '../../common/errors/payment.exception';
@@ -5578,9 +4772,10 @@ export class CircuitBreakerService implements OnModuleDestroy {
     return breaker;
   }
 }
-</file>
+```
 
-<file path="src/modules/providers/provider.interface.ts">
+## File: src/modules/providers/provider.interface.ts
+```typescript
 /**
  * Contrato que toda pasarela externa DEBE implementar.
  * Mantenelo minimal y estable: cambios aqui impactan a todos los adapters.
@@ -5643,9 +4838,10 @@ export interface WebhookEvent {
   status: ProviderChargeResult['status'];
   raw: unknown;
 }
-</file>
+```
 
-<file path="src/modules/providers/provider.registry.ts">
+## File: src/modules/providers/provider.registry.ts
+```typescript
 import { Injectable, Logger } from '@nestjs/common';
 import { PaymentProvider } from './provider.interface';
 
@@ -5684,9 +4880,10 @@ export class ProviderRegistry {
     return [...this.providers.values()];
   }
 }
-</file>
+```
 
-<file path="src/modules/providers/providers.module.ts">
+## File: src/modules/providers/providers.module.ts
+```typescript
 import { Global, Module } from '@nestjs/common';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ProviderRegistry } from './provider.registry';
@@ -5721,9 +4918,10 @@ import { DlocalModule } from './adapters/dlocal/dlocal.module';
   ],
 })
 export class ProvidersModule {}
-</file>
+```
 
-<file path="src/modules/providers/routing.service.ts">
+## File: src/modules/providers/routing.service.ts
+```typescript
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import type { Cache } from 'cache-manager';
@@ -5813,9 +5011,10 @@ export class RoutingService {
     this.logger.log(`Cache invalidado: ${CACHE_KEY(country, currency, method)}`);
   }
 }
-</file>
+```
 
-<file path="src/modules/queue/dlq.processor.ts">
+## File: src/modules/queue/dlq.processor.ts
+```typescript
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
@@ -5837,9 +5036,10 @@ export class DlqProcessor extends WorkerHost {
     // TODO Sprint 5: emit evento a OpenTelemetry / Slack webhook / Sentry
   }
 }
-</file>
+```
 
-<file path="src/modules/queue/queue.module.ts">
+## File: src/modules/queue/queue.module.ts
+```typescript
 import { BullModule } from '@nestjs/bullmq';
 import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -5869,9 +5069,10 @@ import { QUEUE_WEBHOOKS, QUEUE_RECONCILE, QUEUE_DLQ } from '../../common/constan
   exports: [BullModule],
 })
 export class QueueModule {}
-</file>
+```
 
-<file path="src/modules/redis/redis.module.ts">
+## File: src/modules/redis/redis.module.ts
+```typescript
 import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
@@ -5899,9 +5100,10 @@ export const REDIS_CLIENT = 'REDIS_CLIENT';
   exports: [REDIS_CLIENT],
 })
 export class RedisModule {}
-</file>
+```
 
-<file path="src/modules/tenants/api-key.service.ts">
+## File: src/modules/tenants/api-key.service.ts
+```typescript
 import {
   Injectable,
   Logger,
@@ -6076,9 +5278,10 @@ export class ApiKeyService {
     return null;
   }
 }
-</file>
+```
 
-<file path="src/modules/tenants/tenants.controller.ts">
+## File: src/modules/tenants/tenants.controller.ts
+```typescript
 import {
   Body,
   Controller,
@@ -6128,9 +5331,10 @@ export class TenantsController {
     return this.apiKeys.revoke(keyId, t.id);
   }
 }
-</file>
+```
 
-<file path="src/modules/tenants/tenants.module.ts">
+## File: src/modules/tenants/tenants.module.ts
+```typescript
 import { Module } from '@nestjs/common';
 import { ApiKeyService } from './api-key.service';
 import { TenantsController } from './tenants.controller';
@@ -6141,9 +5345,10 @@ import { TenantsController } from './tenants.controller';
   exports:     [ApiKeyService],
 })
 export class TenantsModule {}
-</file>
+```
 
-<file path="src/modules/webhooks/webhook-secret.service.ts">
+## File: src/modules/webhooks/webhook-secret.service.ts
+```typescript
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
@@ -6198,9 +5403,10 @@ export class WebhookSecretService {
     return crypto.createHmac('sha256', secret).update(data).digest('hex');
   }
 }
-</file>
+```
 
-<file path="src/modules/webhooks/webhook.processor.ts">
+## File: src/modules/webhooks/webhook.processor.ts
+```typescript
 import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
@@ -6316,9 +5522,10 @@ export class WebhookProcessor extends WorkerHost {
     this.logger.warn(`Job ${jobId} está stalled.`);
   }
 }
-</file>
+```
 
-<file path="src/modules/webhooks/webhooks.controller.ts">
+## File: src/modules/webhooks/webhooks.controller.ts
+```typescript
 import {
   Controller,
   Headers,
@@ -6411,9 +5618,10 @@ export class WebhooksController {
     return { received: true };
   }
 }
-</file>
+```
 
-<file path="src/modules/webhooks/webhooks.module.ts">
+## File: src/modules/webhooks/webhooks.module.ts
+```typescript
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { WebhooksController } from './webhooks.controller';
@@ -6433,2296 +5641,10 @@ import { QUEUE_WEBHOOKS } from '../../common/constants/queues';
   exports: [WebhookSecretService],
 })
 export class WebhooksModule {}
-</file>
+```
 
-<file path="test/app.e2e-spec.ts">
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
-import { App } from 'supertest/types';
-import { AppModule } from './../src/app.module';
-
-describe('AppController (e2e)', () => {
-  let app: INestApplication<App>;
-
-  beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-  });
-
-  it('/ (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
-  });
-});
-</file>
-
-<file path="test/auth.e2e-spec.ts">
-/**
- * Tests e2e Sprint 7 — Firebase Auth + RBAC
- *
- * Nota: estos tests mockean Firebase Admin SDK.
- * Para tests contra Firebase real, configurar FIREBASE_* en .env.test
- */
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe, VersioningType } from '@nestjs/common';
-import request from 'supertest';
-import { AppModule } from '../src/app.module';
-import { PrismaService } from '../src/modules/prisma/prisma.service';
-import { AllExceptionsFilter } from '../src/common/filters/all-exceptions.filter';
-import { FIREBASE_ADMIN } from '../src/modules/firebase/firebase.module';
-import * as bcrypt from 'bcryptjs';
-
-// Mock de Firebase Admin
-const mockVerifyIdToken = jest.fn();
-jest.mock('firebase-admin', () => ({
-  apps: [],
-  initializeApp: jest.fn(() => ({})),
-  credential: { cert: jest.fn() },
-  app: jest.fn(() => ({
-    auth: () => ({ verifyIdToken: mockVerifyIdToken }),
-  })),
-}));
-
-describe('Auth (e2e)', () => {
-  let app: INestApplication;
-  let prisma: PrismaService;
-  let tenantId: string;
-  let userId: string;
-
-  const FIREBASE_UID   = 'firebase_uid_test_123';
-  const USER_EMAIL     = 'test@pasarela.com';
-  const RAW_API_KEY    = 'e2e-auth-api-key';
-
-  beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    })
-      .overrideProvider(FIREBASE_ADMIN)
-      .useValue({ auth: () => ({ verifyIdToken: mockVerifyIdToken }) })
-      .compile();
-
-    app = moduleFixture.createNestApplication();
-    app.setGlobalPrefix('api');
-    app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' });
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
-    app.useGlobalFilters(new AllExceptionsFilter());
-    await app.init();
-
-    prisma = moduleFixture.get(PrismaService);
-
-    // Tenant + User de prueba en DB
-    const hash = await bcrypt.hash(RAW_API_KEY, 10);
-    const tenant = await prisma.tenant.create({
-      data: { name: 'Auth E2E Tenant', apiKeyHash: hash, active: true },
-    });
-    tenantId = tenant.id;
-
-    const user = await prisma.user.create({
-      data: {
-        tenantId,
-        firebaseUid: FIREBASE_UID,
-        email:       USER_EMAIL,
-        name:        'Test User',
-        role:        'admin',
-        active:      true,
-      },
-    });
-    userId = user.id;
-  });
-
-  afterAll(async () => {
-    await prisma.user.deleteMany({ where: { tenantId } });
-    await prisma.tenant.delete({ where: { id: tenantId } });
-    await app.close();
-  });
-
-  beforeEach(() => {
-    mockVerifyIdToken.mockResolvedValue({
-      uid:   FIREBASE_UID,
-      email: USER_EMAIL,
-      name:  'Test User',
-    });
-  });
-
-  afterEach(() => jest.clearAllMocks());
-
-  describe('GET /api/v1/auth/me', () => {
-    it('retorna perfil con Bearer token válido', async () => {
-      const res = await request(app.getHttpServer())
-        .get('/api/v1/auth/me')
-        .set('Authorization', 'Bearer valid-firebase-token')
-        .expect(200);
-
-      expect(res.body.user.email).toBe(USER_EMAIL);
-      expect(res.body.user.role).toBe('admin');
-      expect(res.body.tenant.id).toBe(tenantId);
-    });
-
-    it('401 sin token', async () => {
-      await request(app.getHttpServer())
-        .get('/api/v1/auth/me')
-        .expect(401);
-    });
-
-    it('401 con token Firebase inválido', async () => {
-      mockVerifyIdToken.mockRejectedValue(new Error('Token inválido'));
-      await request(app.getHttpServer())
-        .get('/api/v1/auth/me')
-        .set('Authorization', 'Bearer invalid-token')
-        .expect(401);
-    });
-  });
-
-  describe('Auth dual: x-api-key sigue funcionando', () => {
-    it('acepta x-api-key junto a Firebase (retrocompatibilidad)', async () => {
-      const res = await request(app.getHttpServer())
-        .get('/api/v1/payments')
-        .set('x-api-key', RAW_API_KEY)
-        .expect(200);
-
-      expect(res.body).toHaveProperty('data');
-    });
-  });
-
-  describe('RBAC', () => {
-    it('viewer no puede crear pagos (403)', async () => {
-      // Cambiar el rol a viewer
-      await prisma.user.update({
-        where: { id: userId },
-        data:  { role: 'viewer' },
-      });
-
-      await request(app.getHttpServer())
-        .post('/api/v1/payments')
-        .set('Authorization', 'Bearer valid-token')
-        .set('idempotency-key', 'rbac-test-key')
-        .send({
-          amountMinor: 1000,
-          currency:    'ARS',
-          country:     'AR',
-          method:      'CARD',
-          customerId:  'cust_rbac',
-        })
-        .expect(403);
-
-      // Restaurar admin
-      await prisma.user.update({
-        where: { id: userId },
-        data:  { role: 'admin' },
-      });
-    });
-
-    it('admin puede crear pagos', async () => {
-      const res = await request(app.getHttpServer())
-        .post('/api/v1/payments')
-        .set('Authorization', 'Bearer valid-token')
-        .set('idempotency-key', 'rbac-admin-key')
-        .send({
-          amountMinor: 1000,
-          currency:    'ARS',
-          country:     'AR',
-          method:      'CARD',
-          customerId:  'cust_rbac_admin',
-        });
-
-      expect([201, 400]).toContain(res.status); // 201 ok, 400 si fake no disponible
-    });
-  });
-});
-</file>
-
-<file path="test/jest-e2e.json">
-{
-  "moduleFileExtensions": ["js", "json", "ts"],
-  "rootDir": ".",
-  "testEnvironment": "node",
-  "testRegex": ".e2e-spec.ts$",
-  "transform": {
-    "^.+\\.(t|j)s$": "ts-jest"
-  }
-}
-</file>
-
-<file path="test/load/k6-payments.ts">
-/**
- * Load test con k6 — Pasarela de Pagos
- *
- * Escenarios:
- *   1. smoke:    1 VU x 30s       — verificar que el sistema responde
- *   2. load:     50 VU x 5min     — carga normal esperada
- *   3. stress:   ramp 0→200 VU    — encontrar el punto de quiebre
- *   4. spike:    burst de 500 VU  — simular pico repentino
- *
- * SLOs objetivos:
- *   p95 < 500ms
- *   p99 < 1000ms
- *   error rate < 1%
- *
- * Uso:
- *   k6 run --env API_URL=http://localhost:3000 --env API_KEY=test-api-key-dev-only test/load/k6-payments.ts
- *   k6 run --scenario=stress test/load/k6-payments.ts
- */
-import http from 'k6/http';
-import { check, sleep } from 'k6';
-import { Rate, Trend } from 'k6/metrics';
-import { uuidv4 } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js';
-
-// --- Métricas custom -------------------------------------------------------
-const errorRate         = new Rate('errors');
-const paymentDuration   = new Trend('payment_duration', true);
-
-// --- Config ----------------------------------------------------------------
-const BASE_URL = __ENV.API_URL  ?? 'http://localhost:3000';
-const API_KEY  = __ENV.API_KEY  ?? 'test-api-key-dev-only';
-
-const HEADERS = {
-  'Content-Type': 'application/json',
-  'x-api-key':    API_KEY,
-};
-
-// --- Escenarios ------------------------------------------------------------
-export const options = {
-  scenarios: {
-    smoke: {
-      executor: 'constant-vus',
-      vus: 1, duration: '30s',
-      tags: { scenario: 'smoke' },
-    },
-    load: {
-      executor: 'ramping-vus',
-      startVUs: 0,
-      stages: [
-        { duration: '30s', target: 50  },
-        { duration: '4m',  target: 50  },
-        { duration: '30s', target: 0   },
-      ],
-      tags: { scenario: 'load' },
-    },
-    stress: {
-      executor: 'ramping-vus',
-      startVUs: 0,
-      stages: [
-        { duration: '1m',  target: 100 },
-        { duration: '2m',  target: 200 },
-        { duration: '1m',  target: 0   },
-      ],
-      tags: { scenario: 'stress' },
-    },
-    spike: {
-      executor: 'ramping-vus',
-      startVUs: 0,
-      stages: [
-        { duration: '10s', target: 500 },
-        { duration: '30s', target: 500 },
-        { duration: '10s', target: 0   },
-      ],
-      tags: { scenario: 'spike' },
-    },
-  },
-  thresholds: {
-    // SLOs de producción
-    'http_req_duration{name:create_payment}': ['p(95)<500', 'p(99)<1000'],
-    'http_req_duration{name:get_payment}':    ['p(95)<200'],
-    'http_req_duration{name:health_ready}':   ['p(95)<100'],
-    'errors':                                 ['rate<0.01'],
-    'http_req_failed':                        ['rate<0.01'],
-  },
-};
-
-// --- Payloads de prueba ----------------------------------------------------
-const COUNTRIES = [
-  { country: 'AR', currency: 'ARS' },
-  { country: 'BR', currency: 'BRL' },
-  { country: 'MX', currency: 'MXN' },
-  { country: 'US', currency: 'USD' },
-];
-
-function randomPayload() {
-  const c = COUNTRIES[Math.floor(Math.random() * COUNTRIES.length)];
-  return JSON.stringify({
-    amountMinor: Math.floor(Math.random() * 100000) + 100,
-    currency:    c.currency,
-    country:     c.country,
-    method:      'CARD',
-    customerId:  `cust_k6_${Math.floor(Math.random() * 1000)}`,
-    description: 'k6 load test payment',
-  });
-}
-
-// --- Test principal --------------------------------------------------------
-export default function () {
-  // 1. Health check
-  const healthRes = http.get(`${BASE_URL}/api/v1/health/ready`, {
-    tags: { name: 'health_ready' },
-  });
-  check(healthRes, { 'health ready = 200': (r) => r.status === 200 });
-
-  // 2. Crear pago
-  const idempotencyKey = uuidv4();
-  const createRes = http.post(
-    `${BASE_URL}/api/v1/payments`,
-    randomPayload(),
-    {
-      headers: { ...HEADERS, 'idempotency-key': idempotencyKey },
-      tags: { name: 'create_payment' },
-    },
-  );
-
-  const createOk = check(createRes, {
-    'create payment 2xx': (r) => r.status >= 200 && r.status < 300,
-    'has payment id':     (r) => {
-      try { return !!(JSON.parse(r.body as string)).id; } catch { return false; }
-    },
-  });
-
-  errorRate.add(!createOk);
-  paymentDuration.add(createRes.timings.duration);
-
-  if (!createOk) return;
-
-  // 3. Leer el pago creado
-  const paymentId = (JSON.parse(createRes.body as string)).id;
-  const getRes = http.get(
-    `${BASE_URL}/api/v1/payments/${paymentId}`,
-    { headers: HEADERS, tags: { name: 'get_payment' } },
-  );
-  check(getRes, { 'get payment 200': (r) => r.status === 200 });
-
-  // 4. Idempotencia: mismo key → mismo resultado
-  const replayRes = http.post(
-    `${BASE_URL}/api/v1/payments`,
-    randomPayload(),
-    {
-      headers: { ...HEADERS, 'idempotency-key': idempotencyKey },
-      tags: { name: 'create_payment' },
-    },
-  );
-  check(replayRes, {
-    'idempotent replay 2xx': (r) => r.status >= 200 && r.status < 300,
-    'same payment id':       (r) => {
-      try { return (JSON.parse(r.body as string)).id === paymentId; } catch { return false; }
-    },
-  });
-
-  sleep(1);
-}
-</file>
-
-<file path="test/payments.e2e-spec.ts">
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe, VersioningType } from '@nestjs/common';
-import request from 'supertest';
-import { App } from 'supertest/types';
-import { AppModule } from '../src/app.module';
-import { PrismaService } from '../src/modules/prisma/prisma.service';
-import { AllExceptionsFilter } from '../src/common/filters/all-exceptions.filter';
-import * as bcrypt from 'bcryptjs';
-
-/**
- * Tests e2e Sprint 1:
- *  ✅ POST /payments — crea un pago exitosamente
- *  ✅ Idempotencia: misma key + mismo body → mismo resultado
- *  ✅ Idempotencia: misma key + body diferente → 409
- *  ✅ Sin API key → 401
- *  ✅ API key inválida → 401
- *  ✅ GET /payments/:id — retorna el pago creado
- *  ✅ GET /payments — lista paginada
- */
-describe('Payments (e2e)', () => {
-  let app: INestApplication<App>;
-  let prisma: PrismaService;
-  const RAW_API_KEY = 'e2e-test-api-key';
-  let tenantId: string;
-
-  beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    app.setGlobalPrefix('api');
-    app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' });
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    );
-    app.useGlobalFilters(new AllExceptionsFilter());
-    await app.init();
-
-    prisma = moduleFixture.get<PrismaService>(PrismaService);
-
-    // Crear tenant de prueba
-    const hash = await bcrypt.hash(RAW_API_KEY, 10);
-    const tenant = await prisma.tenant.create({
-      data: { name: 'E2E Tenant', apiKeyHash: hash, active: true },
-    });
-    tenantId = tenant.id;
-  });
-
-  afterAll(async () => {
-    // Cleanup
-    await prisma.paymentEvent.deleteMany({ where: { payment: { tenantId } } });
-    await prisma.payment.deleteMany({ where: { tenantId } });
-    await prisma.customer.deleteMany({ where: { tenantId } });
-    await prisma.tenant.delete({ where: { id: tenantId } });
-    await app.close();
-  });
-
-  const basePayload = {
-    amountMinor: 10000,
-    currency: 'ARS',
-    country: 'AR',
-    method: 'CARD',
-    customerId: 'cust_e2e_01',
-    email: 'test@example.com',
-    description: 'Test payment',
-  };
-
-  describe('POST /api/v1/payments', () => {
-    it('debería crear un pago exitosamente', async () => {
-      const res = await request(app.getHttpServer())
-        .post('/api/v1/payments')
-        .set('x-api-key', RAW_API_KEY)
-        .set('idempotency-key', 'key-001')
-        .send(basePayload)
-        .expect(201);
-
-      expect(res.body).toMatchObject({
-        amountMinor: '10000',
-        currency: 'ARS',
-        country: 'AR',
-        status: 'CAPTURED', // FakeProvider siempre retorna captured
-        providerId: 'fake',
-      });
-    });
-
-    it('idempotencia: misma key + mismo body → mismo ID de pago', async () => {
-      const key = 'key-idemp-002';
-
-      const res1 = await request(app.getHttpServer())
-        .post('/api/v1/payments')
-        .set('x-api-key', RAW_API_KEY)
-        .set('idempotency-key', key)
-        .send(basePayload)
-        .expect(201);
-
-      const res2 = await request(app.getHttpServer())
-        .post('/api/v1/payments')
-        .set('x-api-key', RAW_API_KEY)
-        .set('idempotency-key', key)
-        .send(basePayload)
-        .expect(201);
-
-      expect(res1.body.id).toBe(res2.body.id);
-    });
-
-    it('idempotencia: misma key + body diferente → 409', async () => {
-      const key = 'key-idemp-409';
-
-      await request(app.getHttpServer())
-        .post('/api/v1/payments')
-        .set('x-api-key', RAW_API_KEY)
-        .set('idempotency-key', key)
-        .send(basePayload)
-        .expect(201);
-
-      await request(app.getHttpServer())
-        .post('/api/v1/payments')
-        .set('x-api-key', RAW_API_KEY)
-        .set('idempotency-key', key)
-        .send({ ...basePayload, amountMinor: 99999 }) // body diferente
-        .expect(409);
-    });
-
-    it('sin API key → 401', async () => {
-      await request(app.getHttpServer())
-        .post('/api/v1/payments')
-        .set('idempotency-key', 'key-no-auth')
-        .send(basePayload)
-        .expect(401);
-    });
-
-    it('API key inválida → 401', async () => {
-      await request(app.getHttpServer())
-        .post('/api/v1/payments')
-        .set('x-api-key', 'wrong-key-xyz')
-        .set('idempotency-key', 'key-bad-auth')
-        .send(basePayload)
-        .expect(401);
-    });
-
-    it('body inválido (monto negativo) → 400', async () => {
-      await request(app.getHttpServer())
-        .post('/api/v1/payments')
-        .set('x-api-key', RAW_API_KEY)
-        .set('idempotency-key', 'key-bad-body')
-        .send({ ...basePayload, amountMinor: -1 })
-        .expect(400);
-    });
-  });
-
-  describe('GET /api/v1/payments/:id', () => {
-    it('debería retornar el pago creado', async () => {
-      const create = await request(app.getHttpServer())
-        .post('/api/v1/payments')
-        .set('x-api-key', RAW_API_KEY)
-        .set('idempotency-key', 'key-get-001')
-        .send(basePayload)
-        .expect(201);
-
-      const res = await request(app.getHttpServer())
-        .get(`/api/v1/payments/${create.body.id}`)
-        .set('x-api-key', RAW_API_KEY)
-        .expect(200);
-
-      expect(res.body.id).toBe(create.body.id);
-      expect(res.body.events).toBeDefined();
-    });
-
-    it('pago de otro tenant → 404', async () => {
-      // Intentar leer un ID que no pertenece a este tenant
-      await request(app.getHttpServer())
-        .get('/api/v1/payments/clxxxxxxxxxxx')
-        .set('x-api-key', RAW_API_KEY)
-        .expect(404);
-    });
-  });
-
-  describe('GET /api/v1/payments', () => {
-    it('debería retornar lista paginada', async () => {
-      const res = await request(app.getHttpServer())
-        .get('/api/v1/payments?page=1&limit=5')
-        .set('x-api-key', RAW_API_KEY)
-        .expect(200);
-
-      expect(res.body).toHaveProperty('data');
-      expect(res.body).toHaveProperty('meta');
-      expect(Array.isArray(res.body.data)).toBe(true);
-    });
-  });
-});
-</file>
-
-<file path="test/state-machine.spec.ts">
-import { assertValidTransition, isTerminal } from '../src/modules/payments/payment-state.machine';
-import { PaymentStatus } from '@prisma/client';
-
-/**
- * Tests unitarios del state machine — sin IO, rápidos.
- */
-describe('PaymentStateMachine', () => {
-  it('PENDING → CAPTURED es válido', () => {
-    expect(() =>
-      assertValidTransition(PaymentStatus.PENDING, PaymentStatus.CAPTURED),
-    ).not.toThrow();
-  });
-
-  it('CAPTURED → PENDING lanza excepción', () => {
-    expect(() =>
-      assertValidTransition(PaymentStatus.CAPTURED, PaymentStatus.PENDING),
-    ).toThrow();
-  });
-
-  it('mismo estado no lanza excepción (idempotente)', () => {
-    expect(() =>
-      assertValidTransition(PaymentStatus.PENDING, PaymentStatus.PENDING),
-    ).not.toThrow();
-  });
-
-  it('FAILED es estado terminal', () => {
-    expect(isTerminal(PaymentStatus.FAILED)).toBe(true);
-  });
-
-  it('PENDING no es estado terminal', () => {
-    expect(isTerminal(PaymentStatus.PENDING)).toBe(false);
-  });
-
-  it('REFUNDED es estado terminal', () => {
-    expect(isTerminal(PaymentStatus.REFUNDED)).toBe(true);
-  });
-
-  it('PARTIALLY_REFUNDED → REFUNDED es válido', () => {
-    expect(() =>
-      assertValidTransition(
-        PaymentStatus.PARTIALLY_REFUNDED,
-        PaymentStatus.REFUNDED,
-      ),
-    ).not.toThrow();
-  });
-});
-</file>
-
-<file path="test/stripe-adapter.spec.ts">
-/**
- * Tests de contrato del adapter Stripe.
- * Mockea la librería oficial para no hacer llamadas reales.
- * Cubre: createCharge, capture, refund, retrieve, verifyWebhook, error mapping.
- */
-import { Test, TestingModule } from '@nestjs/testing';
-import { ConfigService } from '@nestjs/config';
-import { StripeProvider } from '../src/modules/providers/adapters/stripe/stripe.provider';
-import { ProviderRegistry } from '../src/modules/providers/provider.registry';
-import { CircuitBreakerService } from '../src/modules/providers/circuit-breaker.service';
-import { PaymentException } from '../src/common/errors/payment.exception';
-import { PaymentErrorCode } from '../src/common/errors/payment-error.catalog';
-import Stripe from 'stripe';
-
-// Mock de la librería stripe
-jest.mock('stripe');
-
-const mockCreate   = jest.fn();
-const mockCapture  = jest.fn();
-const mockRetrieve = jest.fn();
-const mockRefund   = jest.fn();
-const mockWebhook  = jest.fn();
-
-(Stripe as jest.MockedClass<typeof Stripe>).mockImplementation(() => ({
-  paymentIntents: { create: mockCreate, capture: mockCapture, retrieve: mockRetrieve },
-  refunds:        { create: mockRefund },
-  webhooks:       { constructEvent: mockWebhook },
-} as any));
-
-describe('StripeProvider (contrato)', () => {
-  let provider: StripeProvider;
-  let registry: ProviderRegistry;
-
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        StripeProvider,
-        CircuitBreakerService,
-        {
-          provide: ProviderRegistry,
-          useValue: { register: jest.fn() },
-        },
-        {
-          provide: ConfigService,
-          useValue: {
-            get:          (k: string) => k === 'STRIPE_SECRET_KEY' ? 'sk_test_fake' : undefined,
-            getOrThrow:   (k: string) => k === 'STRIPE_WEBHOOK_SECRET' ? 'whsec_fake' : 'sk_test_fake',
-          },
-        },
-      ],
-    }).compile();
-
-    provider = module.get(StripeProvider);
-    registry = module.get(ProviderRegistry);
-    provider.onModuleInit();
-  });
-
-  afterEach(() => jest.clearAllMocks());
-
-  // -----------------------------------------------------------------------
-  describe('createCharge', () => {
-    it('retorna externalId y status captured en pago exitoso', async () => {
-      mockCreate.mockResolvedValue({
-        id: 'pi_test_123',
-        status: 'succeeded',
-        next_action: null,
-      });
-
-      const result = await provider.createCharge({
-        amountMinor: 10000n,
-        currency: 'USD',
-        country: 'US',
-        customer: { id: 'cust_1', email: 'x@test.com' },
-        method: 'card',
-        idempotencyKey: 'key-001',
-      });
-
-      expect(result.externalId).toBe('pi_test_123');
-      expect(result.status).toBe('captured');
-      expect(mockCreate).toHaveBeenCalledTimes(1);
-    });
-
-    it('retorna redirectUrl cuando Stripe pide 3DS', async () => {
-      mockCreate.mockResolvedValue({
-        id: 'pi_3ds_123',
-        status: 'requires_action',
-        next_action: {
-          redirect_to_url: { url: 'https://stripe.com/3ds' },
-        },
-      });
-
-      const result = await provider.createCharge({
-        amountMinor: 5000n,
-        currency: 'EUR',
-        country: 'DE',
-        customer: { id: 'cust_2' },
-        method: 'card',
-        idempotencyKey: 'key-3ds',
-        returnUrl: 'https://app.com/return',
-      });
-
-      expect(result.status).toBe('pending');
-      expect(result.redirectUrl).toBe('https://stripe.com/3ds');
-    });
-
-    it('mapea insufficient_funds → PaymentException INSUFFICIENT_FUNDS', async () => {
-      const stripeErr = new Stripe.errors.StripeCardError({
-        type: 'card_error',
-        code: 'insufficient_funds',
-        message: 'No funds',
-        doc_url: '',
-        param: '',
-      } as any);
-      mockCreate.mockRejectedValue(stripeErr);
-
-      await expect(
-        provider.createCharge({
-          amountMinor: 999999n,
-          currency: 'USD',
-          country: 'US',
-          customer: { id: 'cust_3' },
-          method: 'card',
-          idempotencyKey: 'key-nsf',
-        }),
-      ).rejects.toBeInstanceOf(PaymentException);
-
-      try {
-        await provider.createCharge({
-          amountMinor: 999999n,
-          currency: 'USD',
-          country: 'US',
-          customer: { id: 'cust_3' },
-          method: 'card',
-          idempotencyKey: 'key-nsf-2',
-        });
-      } catch (e: any) {
-        expect(e.code).toBe(PaymentErrorCode.INSUFFICIENT_FUNDS);
-        expect(e.retryable).toBe(false);
-      }
-    });
-
-    it('mapea StripeConnectionError → PROVIDER_UNAVAILABLE (retryable)', async () => {
-      mockCreate.mockRejectedValue(
-        new Stripe.errors.StripeConnectionError({ message: 'ECONNREFUSED', type: 'api_connection_error' } as any),
-      );
-
-      try {
-        await provider.createCharge({
-          amountMinor: 100n,
-          currency: 'USD',
-          country: 'US',
-          customer: { id: 'c' },
-          method: 'card',
-          idempotencyKey: 'key-conn',
-        });
-      } catch (e: any) {
-        expect(e.code).toBe(PaymentErrorCode.PROVIDER_UNAVAILABLE);
-        expect(e.retryable).toBe(true);
-      }
-    });
-  });
-
-  // -----------------------------------------------------------------------
-  describe('refund', () => {
-    it('retorna externalRefundId y status succeeded', async () => {
-      mockRefund.mockResolvedValue({ id: 're_123', status: 'succeeded' });
-
-      const result = await provider.refund({
-        externalId: 'pi_test_123',
-        amountMinor: 5000n,
-      });
-
-      expect(result.externalRefundId).toBe('re_123');
-      expect(result.status).toBe('succeeded');
-    });
-  });
-
-  // -----------------------------------------------------------------------
-  describe('retrieve', () => {
-    it('retorna el estado actual del PaymentIntent', async () => {
-      mockRetrieve.mockResolvedValue({ id: 'pi_test_123', status: 'succeeded' });
-      const result = await provider.retrieve('pi_test_123');
-      expect(result.status).toBe('captured');
-    });
-  });
-
-  // -----------------------------------------------------------------------
-  describe('verifyWebhook', () => {
-    it('retorna WebhookEvent para payment_intent.succeeded', async () => {
-      mockWebhook.mockReturnValue({
-        id: 'evt_123',
-        type: 'payment_intent.succeeded',
-        data: { object: { id: 'pi_abc', payment_intent: 'pi_abc' } },
-      });
-
-      const event = await provider.verifyWebhook(
-        Buffer.from('{}'),
-        { 'stripe-signature': 't=123,v1=abc' },
-      );
-
-      expect(event.eventType).toBe('payment_intent.succeeded');
-      expect(event.status).toBe('captured');
-    });
-
-    it('lanza UnauthorizedException si la firma es inválida', async () => {
-      mockWebhook.mockImplementation(() => {
-        throw new Error('Signature mismatch');
-      });
-
-      await expect(
-        provider.verifyWebhook(Buffer.from('{}'), { 'stripe-signature': 'bad' }),
-      ).rejects.toThrow('Firma Stripe inválida');
-    });
-  });
-
-  // -----------------------------------------------------------------------
-  describe('registro', () => {
-    it('se registra en el ProviderRegistry al inicializar', () => {
-      expect(registry.register).toHaveBeenCalledWith(provider);
-    });
-
-    it('tiene los metadatos correctos', () => {
-      expect(provider.id).toBe('stripe');
-      expect(provider.currencies).toContain('USD');
-      expect(provider.countries).toContain('US');
-    });
-  });
-});
-</file>
-
-<file path="test/webhooks.e2e-spec.ts">
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe, VersioningType } from '@nestjs/common';
-import request from 'supertest';
-import { App } from 'supertest/types';
-import * as crypto from 'crypto';
-import { AppModule } from '../src/app.module';
-import { PrismaService } from '../src/modules/prisma/prisma.service';
-import { AllExceptionsFilter } from '../src/common/filters/all-exceptions.filter';
-import * as bcrypt from 'bcryptjs';
-
-/**
- * Tests e2e Sprint 2:
- *  ✅ Webhook válido → 200 + encolado
- *  ✅ Webhook duplicado → 200 + skip (no duplica en DB)
- *  ✅ Firma inválida en producción → 401
- *  ✅ State machine: transición inválida → no actualiza el payment
- *  ✅ Webhook llega 50 veces → procesado exactamente 1 vez
- */
-describe('Webhooks (e2e)', () => {
-  let app: INestApplication<App>;
-  let prisma: PrismaService;
-  const RAW_API_KEY = 'e2e-webhook-api-key';
-  let tenantId: string;
-  let paymentId: string;
-  let externalId: string;
-
-  beforeAll(async () => {
-    process.env.WEBHOOK_SIGNING_SECRET = 'test-secret-for-e2e';
-
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication({ rawBody: true });
-    app.setGlobalPrefix('api');
-    app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' });
-    app.useGlobalPipes(
-      new ValidationPipe({ whitelist: true, transform: true }),
-    );
-    app.useGlobalFilters(new AllExceptionsFilter());
-    await app.init();
-
-    prisma = moduleFixture.get<PrismaService>(PrismaService);
-
-    // Tenant de prueba
-    const hash = await bcrypt.hash(RAW_API_KEY, 10);
-    const tenant = await prisma.tenant.create({
-      data: { name: 'E2E Webhook Tenant', apiKeyHash: hash, active: true },
-    });
-    tenantId = tenant.id;
-
-    // Payment de prueba pre-existente para los tests de estado
-    externalId = `fake_webhook_test_${Date.now()}`;
-    const p = await prisma.payment.create({
-      data: {
-        tenantId,
-        idempotencyKey: `wh-test-${Date.now()}`,
-        amountMinor: 5000n,
-        currency: 'ARS',
-        country: 'AR',
-        method: 'CARD',
-        status: 'PENDING',
-        providerId: 'fake',
-        externalId,
-      },
-    });
-    paymentId = p.id;
-  });
-
-  afterAll(async () => {
-    await prisma.paymentEvent.deleteMany({ where: { paymentId } });
-    await prisma.webhookInbound.deleteMany({ where: { providerId: 'fake' } });
-    await prisma.payment.deleteMany({ where: { tenantId } });
-    await prisma.tenant.delete({ where: { id: tenantId } });
-    await app.close();
-  });
-
-  const buildWebhookPayload = (overrides = {}) => ({
-    type: 'payment.captured',
-    externalId,
-    status: 'captured',
-    ...overrides,
-  });
-
-  const buildSignature = (body: object) => {
-    const raw = Buffer.from(JSON.stringify(body));
-    const sig = crypto
-      .createHmac('sha256', 'test-secret-for-e2e')
-      .update(raw)
-      .digest('hex');
-    return `sha256=${sig}`;
-  };
-
-  it('debería recibir webhook válido y responder 200 en < 200ms', async () => {
-    const body = buildWebhookPayload();
-    const start = Date.now();
-
-    const res = await request(app.getHttpServer())
-      .post('/api/v1/webhooks/fake')
-      .set('content-type', 'application/json')
-      .set('x-fake-signature', buildSignature(body))
-      .send(body)
-      .expect(200);
-
-    expect(res.body).toEqual({ received: true });
-    expect(Date.now() - start).toBeLessThan(200);
-  });
-
-  it('webhook duplicado (mismo externalId) → 200 pero no duplica en DB', async () => {
-    const body = buildWebhookPayload({ externalId: `dup_${Date.now()}` });
-
-    // Enviar 3 veces el mismo evento
-    for (let i = 0; i < 3; i++) {
-      await request(app.getHttpServer())
-        .post('/api/v1/webhooks/fake')
-        .set('content-type', 'application/json')
-        .set('x-fake-signature', buildSignature(body))
-        .send(body)
-        .expect(200);
-    }
-
-    const count = await prisma.webhookInbound.count({
-      where: { providerId: 'fake', externalId: body.externalId },
-    });
-    expect(count).toBe(1);
-  });
-
-  it('webhook llega 50 veces → solo 1 registro en DB', async () => {
-    const body = buildWebhookPayload({ externalId: `flood_${Date.now()}` });
-
-    await Promise.all(
-      Array.from({ length: 50 }).map(() =>
-        request(app.getHttpServer())
-          .post('/api/v1/webhooks/fake')
-          .set('content-type', 'application/json')
-          .set('x-fake-signature', buildSignature(body))
-          .send(body)
-          .expect(200),
-      ),
-    );
-
-    const count = await prisma.webhookInbound.count({
-      where: { providerId: 'fake', externalId: body.externalId },
-    });
-    expect(count).toBe(1);
-  });
-});
-</file>
-
-<file path="tsconfig.build.json">
-{
-  "extends": "./tsconfig.json",
-  "exclude": ["node_modules", "test", "dist", "**/*spec.ts"]
-}
-</file>
-
-<file path="tsconfig.json">
-{
-  "compilerOptions": {
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
-    "resolvePackageJsonExports": true,
-    "esModuleInterop": true,
-    "isolatedModules": true,
-    "declaration": true,
-    "removeComments": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true,
-    "target": "ES2023",
-    "sourceMap": true,
-    "outDir": "./dist",
-    "baseUrl": "./",
-    "incremental": true,
-    "skipLibCheck": true,
-    "strictNullChecks": true,
-    "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": false,
-    "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
-  }
-}
-</file>
-
-<file path="x.sh">
-#!/usr/bin/env bash
-# =============================================================================
-# pasarela-sso-integration.sh
-# Pasarela de Pagos — Integración al ecosistema SSO Multi-Tenant
-# Sprints 1, 2 y 4 (código). Sprint 3 requiere schema manual primero.
-#
-# USO:
-#   chmod +x pasarela-sso-integration.sh
-#   ./pasarela-sso-integration.sh
-#
-# ANTES DE CORRER:
-#   1. Aplicar el schema manual de Sprint 3 en prisma/schema.prisma
-#   2. Correr: pnpm prisma migrate dev --name sprint8_organizationId
-#   3. Tener pnpm instalado y DATABASE_URL configurado
-#
-# LO QUE HACE ESTE SCRIPT:
-#   Sprint 1 — FirebaseModule + FirebaseAuthGuard alineados al dashboard
-#   Sprint 2 — TenantGuard con productPermissions["payments"] + OrgContext
-#   Sprint 3 — Actualizar payments.service, payments.controller, reconciliation
-#   Sprint 4 — AuthController limpio + env.validation + main.ts actualizado
-# =============================================================================
-
-set -euo pipefail
-
-BLUE='\033[0;34m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-NC='\033[0m'
-
-log()  { echo -e "${BLUE}[SSO]${NC} $*"; }
-ok()   { echo -e "${GREEN}[OK]${NC} $*"; }
-warn() { echo -e "${YELLOW}[WARN]${NC} $*"; }
-fail() { echo -e "${RED}[ERR]${NC} $*"; exit 1; }
-
-[ -f "package.json" ] || fail "Corré desde la raíz del proyecto (donde está package.json)"
-
-# =============================================================================
-# SPRINT 1 — FirebaseModule + FirebaseAuthGuard
-# =============================================================================
-log "Sprint 1: FirebaseModule + FirebaseAuthGuard alineados al dashboard..."
-
-mkdir -p src/modules/firebase
-mkdir -p src/common/guards
-
-# --- FirebaseModule (token FIREBASE_ADMIN igual al dashboard) ---
-cat > src/modules/firebase/firebase.module.ts << 'EOF'
-// src/modules/firebase/firebase.module.ts
-// Patrón idéntico al owner-dashboard — mismo FIREBASE_PROJECT_ID compartido.
-import { Global, Logger, Module } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import * as admin from 'firebase-admin';
-
-export const FIREBASE_ADMIN = 'FIREBASE_ADMIN';
-
-@Global()
-@Module({
-  providers: [
-    {
-      provide: FIREBASE_ADMIN,
-      inject: [ConfigService],
-      useFactory: (config: ConfigService): admin.app.App | null => {
-        const logger    = new Logger('FirebaseModule');
-        const projectId = config.get<string>('FIREBASE_PROJECT_ID');
-
-        if (!projectId) {
-          logger.warn('FIREBASE_PROJECT_ID no configurado — Firebase desactivado');
-          return null;
-        }
-
-        // Evitar inicialización duplicada (hot reload)
-        const existing = admin.apps.find((a) => a?.name === '[DEFAULT]');
-        if (existing) return existing;
-
-        const clientEmail = config.get<string>('FIREBASE_CLIENT_EMAIL');
-        const privateKey  = config
-          .get<string>('FIREBASE_PRIVATE_KEY')
-          ?.replace(/\\n/g, '\n');
-
-        try {
-          const app = admin.initializeApp({
-            credential:
-              clientEmail && privateKey
-                ? admin.credential.cert({ projectId, clientEmail, privateKey })
-                : admin.credential.applicationDefault(),
-            projectId,
-          });
-          logger.log(`Firebase inicializado — proyecto: ${projectId}`);
-          return app;
-        } catch (err) {
-          logger.error('Error inicializando Firebase', err);
-          return null;
-        }
-      },
-    },
-  ],
-  exports: [FIREBASE_ADMIN],
-})
-export class FirebaseModule {}
-EOF
-
-# --- FirebaseAuthService (solo verifica tokens — sin lógica de negocio) ---
-cat > src/modules/firebase/firebase-auth.service.ts << 'EOF'
-// src/modules/firebase/firebase-auth.service.ts
-import {
-  Inject,
-  Injectable,
-  Logger,
-  UnauthorizedException,
-} from '@nestjs/common';
-import type * as admin from 'firebase-admin';
-import { FIREBASE_ADMIN } from './firebase.module';
-
-export interface FirebaseDecodedToken {
-  uid: string;
-  email?: string;
-  name?: string;
-  // Claims custom inyectados por el owner-dashboard
-  organizationId?: string;
-  productPermissions?: Record<string, { canRead: boolean; canWrite: boolean }>;
-  organizations?: string[];
-}
-
-@Injectable()
-export class FirebaseAuthService {
-  private readonly logger = new Logger(FirebaseAuthService.name);
-
-  constructor(
-    @Inject(FIREBASE_ADMIN)
-    private readonly firebase: admin.app.App | null,
-  ) {}
-
-  get isEnabled(): boolean {
-    return this.firebase !== null;
-  }
-
-  /**
-   * Verifica un ID token de Firebase y retorna los claims decodificados.
-   * Lanza UnauthorizedException si el token es inválido o Firebase no está configurado.
-   */
-  async verifyToken(token: string): Promise<FirebaseDecodedToken> {
-    if (!this.firebase) {
-      throw new UnauthorizedException(
-        'Firebase Auth no está configurado en este servidor',
-      );
-    }
-
-    try {
-      const decoded = await this.firebase.auth().verifyIdToken(token, true);
-      return {
-        uid:                decoded.uid,
-        email:              decoded.email,
-        name:               decoded.name,
-        organizationId:     decoded['organizationId'] as string | undefined,
-        productPermissions: decoded['productPermissions'] as
-          | Record<string, { canRead: boolean; canWrite: boolean }>
-          | undefined,
-        organizations:      decoded['organizations'] as string[] | undefined,
-      };
-    } catch (err) {
-      this.logger.warn(`Token Firebase inválido: ${(err as Error).message}`);
-      throw new UnauthorizedException('Token inválido o expirado');
-    }
-  }
-}
-EOF
-
-# --- FirebaseAuthGuard (idéntico al del owner-dashboard) ---
-cat > src/common/guards/firebase-auth.guard.ts << 'EOF'
-// src/common/guards/firebase-auth.guard.ts
-// Guard idéntico al del owner-dashboard — mismo contrato, mismo FIREBASE_PROJECT_ID.
-import {
-  CanActivate,
-  ExecutionContext,
-  Inject,
-  Injectable,
-  Logger,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import type { Request } from 'express';
-import type * as admin from 'firebase-admin';
-import { FIREBASE_ADMIN } from '../../modules/firebase/firebase.module';
-import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
-
-@Injectable()
-export class FirebaseAuthGuard implements CanActivate {
-  private readonly logger = new Logger(FirebaseAuthGuard.name);
-
-  constructor(
-    @Inject(FIREBASE_ADMIN)
-    private readonly firebase: admin.app.App | null,
-    private readonly reflector: Reflector,
-  ) {}
-
-  async canActivate(context: ExecutionContext): Promise<boolean> {
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-    if (isPublic) return true;
-
-    const request = context.switchToHttp().getRequest<Request>();
-    const token   = this.extractBearerToken(request);
-
-    if (!token) {
-      throw new UnauthorizedException(
-        'Autenticación requerida: Authorization: Bearer <firebaseToken>',
-      );
-    }
-
-    if (!this.firebase) {
-      throw new UnauthorizedException(
-        'Firebase no configurado en este entorno',
-      );
-    }
-
-    try {
-      const decoded = await this.firebase.auth().verifyIdToken(token, true);
-
-      // Inyectar en el request para uso por TenantGuard y decoradores
-      (request as Record<string, unknown>)['firebaseUser'] = decoded;
-      (request as Record<string, unknown>)['user'] = {
-        uid:   decoded.uid,
-        email: decoded.email ?? '',
-        // Claims custom del owner-dashboard
-        productPermissions: decoded['productPermissions'] ?? {},
-        organizations:      decoded['organizations'] ?? [],
-      };
-
-      return true;
-    } catch (err) {
-      this.logger.warn(`Token inválido: ${(err as Error).message}`);
-      throw new UnauthorizedException('Token inválido o expirado');
-    }
-  }
-
-  private extractBearerToken(request: Request): string | null {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    return type === 'Bearer' && token ? token : null;
-  }
-}
-EOF
-
-# --- AuthGuard dual actualizado (Firebase SSO + x-api-key B2B) ---
-cat > src/common/guards/auth.guard.ts << 'EOF'
-// src/common/guards/auth.guard.ts
-// Guard dual que acepta:
-//   1. Authorization: Bearer {firebaseToken}  → SSO del ecosistema
-//   2. x-api-key: pk_{prefix}_{random}        → B2B / server-to-server
-//
-// Resultado en req:
-//   req['organizationId']  — siempre (ambos paths)
-//   req['user']            — solo Firebase (uid, email, productPermissions)
-//   req['tenant']          — siempre { id, name } para compatibilidad backward
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  Logger,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
-import { FirebaseAuthService } from '../../modules/firebase/firebase-auth.service';
-import { ApiKeyService } from '../../modules/tenants/api-key.service';
-
-@Injectable()
-export class AuthGuard implements CanActivate {
-  private readonly logger = new Logger(AuthGuard.name);
-
-  constructor(
-    private readonly firebase:  FirebaseAuthService,
-    private readonly apiKeys:   ApiKeyService,
-    private readonly reflector: Reflector,
-  ) {}
-
-  async canActivate(context: ExecutionContext): Promise<boolean> {
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-    if (isPublic) return true;
-
-    const req = context.switchToHttp().getRequest<Record<string, unknown>>();
-
-    // ---- Path 1: API Key B2B ------------------------------------------------
-    const apiKey = (req['headers'] as Record<string, string>)['x-api-key'];
-    if (apiKey) {
-      const tenant = await this.apiKeys.validate(apiKey);
-      if (!tenant) throw new UnauthorizedException('API key inválida o expirada');
-
-      req['tenant']         = { id: tenant.id, name: tenant.name };
-      req['organizationId'] = tenant.id; // tenantId === organizationId en B2B
-      return true;
-    }
-
-    // ---- Path 2: Firebase Bearer --------------------------------------------
-    const authHeader = (req['headers'] as Record<string, string>)['authorization'];
-    if (authHeader?.startsWith('Bearer ')) {
-      const token   = authHeader.slice(7);
-      const decoded = await this.firebase.verifyToken(token);
-
-      req['firebaseUser'] = decoded;
-      req['user'] = {
-        uid:                decoded.uid,
-        email:              decoded.email,
-        name:               decoded.name,
-        productPermissions: decoded.productPermissions ?? {},
-        organizations:      decoded.organizations ?? [],
-      };
-
-      // organizationId se fija en TenantGuard tras validar x-organization-id
-      return true;
-    }
-
-    throw new UnauthorizedException(
-      'Autenticación requerida: x-api-key o Authorization: Bearer <token>',
-    );
-  }
-}
-EOF
-
-ok "Sprint 1 completado."
-
-# =============================================================================
-# SPRINT 2 — TenantGuard + OrgContext
-# =============================================================================
-log "Sprint 2: TenantGuard con productPermissions[payments]..."
-
-mkdir -p src/common/interfaces
-
-# --- Interface OrgContext ---
-cat > src/common/interfaces/org-context.interface.ts << 'EOF'
-// src/common/interfaces/org-context.interface.ts
-// Contexto inyectado por TenantGuard en cada request autenticado.
-export interface OrgContext {
-  organizationId: string;           // UUID del org en el owner-dashboard
-  userId:         string;           // firebaseUid del usuario
-  canRead:        boolean;          // productPermissions["payments"].canRead
-  canWrite:       boolean;          // productPermissions["payments"].canWrite
-  isApiKey:       boolean;          // true = path B2B, false = path SSO
-}
-EOF
-
-# --- Decorador @OrgCtx() ---
-cat > src/common/decorators/org.decorator.ts << 'EOF'
-// src/common/decorators/org.decorator.ts
-import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import type { OrgContext } from '../interfaces/org-context.interface';
-
-/**
- * @OrgCtx() — inyecta el OrgContext en el parámetro del controller.
- * Requiere que TenantGuard haya corrido antes.
- *
- * Uso:
- *   @Get()
- *   findAll(@OrgCtx() ctx: OrgContext) { ... }
- */
-export const OrgCtx = createParamDecorator(
-  (_data: unknown, ctx: ExecutionContext): OrgContext => {
-    const request = ctx.switchToHttp().getRequest<Record<string, unknown>>();
-    return request['orgContext'] as OrgContext;
-  },
-);
-EOF
-
-# --- TenantGuard ---
-cat > src/common/guards/tenant.guard.ts << 'EOF'
-// src/common/guards/tenant.guard.ts
-//
-// Valida:
-//   1. Header x-organization-id presente
-//   2. El usuario pertenece a esa org (via claim 'organizations' en el token)
-//   3. productPermissions["payments"] existe con al menos canRead=true
-//
-// Para path B2B (x-api-key): la org ya está resuelta en AuthGuard,
-// se asumen permisos totales (canRead + canWrite).
-//
-// NOTA SOBRE PRODUCTPERMISSIONS:
-//   Los claims custom del token Firebase son inyectados por el owner-dashboard
-//   cuando hace login. Si el token es viejo (antes de agregar permisos),
-//   se consulta opcionalmente al dashboard via DASHBOARD_API_URL.
-//   Por ahora: validamos desde claims + fallback a canRead=true si no hay claims
-//   (para no romper en desarrollo sin dashboard configurado).
-import {
-  BadRequestException,
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import type { OrgContext } from '../interfaces/org-context.interface';
-import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
-import { Reflector } from '@nestjs/core';
-
-const PRODUCT_KEY = 'payments';
-
-@Injectable()
-export class TenantGuard implements CanActivate {
-  private readonly logger = new Logger(TenantGuard.name);
-
-  constructor(
-    private readonly config: ConfigService,
-    private readonly reflector: Reflector,
-  ) {}
-
-  canActivate(context: ExecutionContext): boolean {
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-    if (isPublic) return true;
-
-    const req = context.switchToHttp().getRequest<Record<string, unknown>>();
-    const orgIdHeader = (req['headers'] as Record<string, string>)[
-      'x-organization-id'
-    ];
-
-    // --- Path B2B (API Key): tenant ya resuelto en AuthGuard ---
-    const isApiKey = req['organizationId'] !== undefined && !req['user'];
-    if (isApiKey) {
-      const ctx: OrgContext = {
-        organizationId: req['organizationId'] as string,
-        userId:         'api-key',
-        canRead:        true,
-        canWrite:       true,
-        isApiKey:       true,
-      };
-      req['orgContext'] = ctx;
-      // Mantener compatibilidad con @Tenant() decorator existente
-      req['tenant'] = { id: ctx.organizationId, name: 'api-key-tenant' };
-      return true;
-    }
-
-    // --- Path SSO (Firebase Bearer) ---
-    if (!orgIdHeader) {
-      throw new BadRequestException('Header x-organization-id requerido');
-    }
-
-    const user = req['user'] as {
-      uid: string;
-      email?: string;
-      organizations?: string[];
-      productPermissions?: Record<string, { canRead: boolean; canWrite: boolean }>;
-    } | undefined;
-
-    if (!user?.uid) {
-      throw new BadRequestException(
-        'Usuario no autenticado — FirebaseAuthGuard debe correr antes de TenantGuard',
-      );
-    }
-
-    // Validar que el usuario pertenece a la org solicitada
-    const userOrgs = user.organizations ?? [];
-    const isDev    = this.config.get<string>('NODE_ENV') !== 'production';
-
-    if (userOrgs.length > 0 && !userOrgs.includes(orgIdHeader)) {
-      this.logger.warn(
-        `Usuario ${user.uid} no pertenece a la org ${orgIdHeader}`,
-      );
-      throw new ForbiddenException(
-        'No pertenecés a la organización indicada',
-      );
-    }
-
-    // Validar productPermissions["payments"]
-    const perms     = user.productPermissions?.[PRODUCT_KEY];
-    const canRead   = perms?.canRead  ?? isDev; // dev fallback
-    const canWrite  = perms?.canWrite ?? isDev;
-
-    if (!canRead) {
-      this.logger.warn(
-        `Usuario ${user.uid} sin acceso a ${PRODUCT_KEY} en org ${orgIdHeader}`,
-      );
-      throw new ForbiddenException(
-        `Sin acceso al módulo "${PRODUCT_KEY}" en esta organización`,
-      );
-    }
-
-    const ctx: OrgContext = {
-      organizationId: orgIdHeader,
-      userId:         user.uid,
-      canRead,
-      canWrite,
-      isApiKey:       false,
-    };
-
-    req['orgContext']      = ctx;
-    req['organizationId']  = orgIdHeader;
-    // Mantener compatibilidad con @Tenant() decorator existente
-    req['tenant'] = { id: orgIdHeader, name: orgIdHeader };
-
-    return true;
-  }
-}
-EOF
-
-# --- WriteGuard: protección extra para mutaciones ---
-cat > src/common/guards/write.guard.ts << 'EOF'
-// src/common/guards/write.guard.ts
-// Usar en endpoints que crean/modifican datos.
-// Requiere que TenantGuard ya haya corrido (para tener orgContext).
-import {
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-  Injectable,
-} from '@nestjs/common';
-import type { OrgContext } from '../interfaces/org-context.interface';
-
-@Injectable()
-export class WriteGuard implements CanActivate {
-  canActivate(context: ExecutionContext): boolean {
-    const req = context.switchToHttp().getRequest<Record<string, unknown>>();
-    const ctx = req['orgContext'] as OrgContext | undefined;
-
-    if (!ctx?.canWrite) {
-      throw new ForbiddenException(
-        'No tenés permisos de escritura en este módulo',
-      );
-    }
-    return true;
-  }
-}
-EOF
-
-ok "Sprint 2 completado."
-
-# =============================================================================
-# SPRINT 3 — Actualizar PaymentsService + PaymentsController
-# =============================================================================
-log "Sprint 3: Actualizar PaymentsService para usar organizationId..."
-
-# Reemplazar payments.controller.ts
-cat > src/modules/payments/payments.controller.ts << 'EOF'
-// src/modules/payments/payments.controller.ts
-import {
-  Body,
-  Controller,
-  Get,
-  Headers,
-  Param,
-  Post,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiSecurity,
-  ApiHeader,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
-import { PaymentsService } from './payments.service';
-import { CreatePaymentDto } from './dto/create-payment.dto';
-import { ListPaymentsDto } from './dto/list-payments.dto';
-import { AuthGuard } from '../../common/guards/auth.guard';
-import { TenantGuard } from '../../common/guards/tenant.guard';
-import { WriteGuard } from '../../common/guards/write.guard';
-import { PciGuard } from '../../common/guards/pci.guard';
-import { OrgCtx } from '../../common/decorators/org.decorator';
-import type { OrgContext } from '../../common/interfaces/org-context.interface';
-
-@ApiTags('payments')
-@ApiSecurity('x-api-key')
-@ApiBearerAuth()
-@UseGuards(AuthGuard, TenantGuard)
-@Controller({ path: 'payments', version: '1' })
-export class PaymentsController {
-  constructor(private readonly payments: PaymentsService) {}
-
-  @Post()
-  @UseGuards(WriteGuard, PciGuard)
-  @ApiHeader({ name: 'idempotency-key', required: true })
-  @ApiHeader({ name: 'x-organization-id', required: true })
-  create(
-    @Body() dto: CreatePaymentDto,
-    @Headers('idempotency-key') idempotencyKey: string,
-    @OrgCtx() ctx: OrgContext,
-  ) {
-    return this.payments.create(dto, idempotencyKey, ctx);
-  }
-
-  @Get()
-  @ApiHeader({ name: 'x-organization-id', required: true })
-  findAll(@Query() query: ListPaymentsDto, @OrgCtx() ctx: OrgContext) {
-    return this.payments.findAll(ctx, query);
-  }
-
-  @Get(':id')
-  @ApiHeader({ name: 'x-organization-id', required: true })
-  findOne(@Param('id') id: string, @OrgCtx() ctx: OrgContext) {
-    return this.payments.findOne(id, ctx);
-  }
-
-  @Post(':id/refund')
-  @UseGuards(WriteGuard)
-  @ApiHeader({ name: 'x-organization-id', required: true })
-  refund(
-    @Param('id') id: string,
-    @Body() body: { amountMinor?: number; reason?: string },
-    @OrgCtx() ctx: OrgContext,
-  ) {
-    return this.payments.refund(id, body, ctx);
-  }
-}
-EOF
-
-# Reemplazar payments.service.ts
-cat > src/modules/payments/payments.service.ts << 'EOF'
-// src/modules/payments/payments.service.ts
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { ProviderRegistry } from '../providers/provider.registry';
-import { AuditService } from '../audit/audit.service';
-import { MetricsService } from '../metrics/metrics.service';
-import { CreatePaymentDto } from './dto/create-payment.dto';
-import { assertValidTransition } from './payment-state.machine';
-import type { OrgContext } from '../../common/interfaces/org-context.interface';
-import { PaymentStatus, PaymentMethodKind } from '@prisma/client';
-
-@Injectable()
-export class PaymentsService {
-  private readonly logger = new Logger(PaymentsService.name);
-
-  constructor(
-    private readonly prisma:   PrismaService,
-    private readonly registry: ProviderRegistry,
-    private readonly audit:    AuditService,
-    private readonly metrics:  MetricsService,
-  ) {}
-
-  // -------------------------------------------------------------------------
-  // CREATE
-  // -------------------------------------------------------------------------
-  async create(
-    dto: CreatePaymentDto,
-    idempotencyKey: string,
-    ctx: OrgContext,
-  ) {
-    if (!idempotencyKey?.trim()) {
-      throw new BadRequestException(
-        'Header idempotency-key requerido para crear pagos',
-      );
-    }
-
-    const orgId = ctx.organizationId;
-    const start = Date.now();
-
-    // 1. Idempotencia nivel DB — filtrado por organizationId
-    const existing = await this.prisma.payment.findFirst({
-      where: {
-        organizationId: orgId,
-        idempotencyKey,
-      },
-    });
-    if (existing) return this.serialize(existing);
-
-    // 2. Routing
-    const provider = this.registry.selectFor(dto.country, dto.currency);
-
-    this.logger.log(
-      `Pago org=${orgId} provider=${provider.id} ` +
-      `${dto.amountMinor} ${dto.currency} ${dto.country}`,
-    );
-
-    this.metrics.incrementPending(dto.country);
-
-    // 3. Crear Payment PENDING en DB
-    const payment = await this.prisma.$transaction(async (tx) => {
-      let customerId: string | undefined;
-      if (dto.customerId) {
-        const customer = await tx.customer.upsert({
-          where: {
-            tenantId_externalId: {
-              tenantId:   orgId,
-              externalId: dto.customerId,
-            },
-          },
-          update: {},
-          create: {
-            tenantId:       orgId,
-            organizationId: orgId,
-            externalId:     dto.customerId,
-            email:          dto.email,
-            country:        dto.country,
-          },
-        });
-        customerId = customer.id;
-      }
-
-      const p = await tx.payment.create({
-        data: {
-          tenantId:       orgId,
-          organizationId: orgId,
-          idempotencyKey,
-          amountMinor:    BigInt(dto.amountMinor),
-          currency:       dto.currency,
-          country:        dto.country,
-          method:         dto.method as PaymentMethodKind,
-          status:         PaymentStatus.PENDING,
-          providerId:     provider.id,
-          description:    dto.description,
-          metadata:       dto.metadata,
-          ...(customerId ? { customerId } : {}),
-        },
-      });
-
-      await tx.paymentEvent.create({
-        data: {
-          paymentId: p.id,
-          type:      'payment.created',
-          payload:   { providerId: provider.id, organizationId: orgId },
-        },
-      });
-
-      return p;
-    });
-
-    // 4. Llamar provider
-    try {
-      const result = await provider.createCharge({
-        amountMinor:   BigInt(dto.amountMinor),
-        currency:      dto.currency,
-        country:       dto.country,
-        customer:      { id: dto.customerId ?? payment.id, email: dto.email },
-        description:   dto.description,
-        method:        dto.method as any,
-        idempotencyKey,
-        returnUrl:     dto.returnUrl,
-        metadata:      dto.metadata,
-      });
-
-      const finalStatus = this.mapProviderStatus(result.status);
-
-      const updated = await this.prisma.$transaction(async (tx) => {
-        const p = await tx.payment.update({
-          where: { id: payment.id },
-          data:  { externalId: result.externalId, status: finalStatus },
-        });
-        await tx.paymentEvent.create({
-          data: {
-            paymentId: payment.id,
-            type:      `provider.${result.status}`,
-            payload:   result.raw as Record<string, unknown>,
-          },
-        });
-        return p;
-      });
-
-      this.metrics.decrementPending(dto.country);
-      this.metrics.recordPayment({
-        provider:   provider.id,
-        status:     finalStatus,
-        country:    dto.country,
-        method:     dto.method,
-        durationMs: Date.now() - start,
-      });
-
-      await this.audit.log({
-        tenantId:       orgId,
-        organizationId: orgId,
-        actorId:        ctx.userId,
-        action:         'payment.created',
-        resourceId:     updated.id,
-        resourceType:   'Payment',
-        after:          { status: finalStatus, providerId: provider.id },
-      });
-
-      return this.serialize(updated);
-    } catch (err) {
-      this.metrics.decrementPending(dto.country);
-      await this.prisma.payment.update({
-        where: { id: payment.id },
-        data:  {
-          status:         PaymentStatus.FAILED,
-          failureCode:    'PROVIDER_ERROR',
-          failureMessage: (err as Error).message,
-        },
-      });
-      throw err;
-    }
-  }
-
-  // -------------------------------------------------------------------------
-  // LIST — siempre filtrado por organizationId
-  // -------------------------------------------------------------------------
-  async findAll(
-    ctx: OrgContext,
-    query: { status?: PaymentStatus; page?: number; limit?: number },
-  ) {
-    const page  = query.page  ?? 1;
-    const limit = query.limit ?? 20;
-    const skip  = (page - 1) * limit;
-
-    const where = {
-      organizationId: ctx.organizationId,
-      ...(query.status ? { status: query.status } : {}),
-    };
-
-    const [items, total] = await this.prisma.$transaction([
-      this.prisma.payment.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit,
-      }),
-      this.prisma.payment.count({ where }),
-    ]);
-
-    return {
-      data:  items.map((p) => this.serialize(p)),
-      meta:  { total, page, limit, pages: Math.ceil(total / limit) },
-    };
-  }
-
-  // -------------------------------------------------------------------------
-  // FIND ONE — validar que pertenece a la org
-  // -------------------------------------------------------------------------
-  async findOne(id: string, ctx: OrgContext) {
-    const payment = await this.prisma.payment.findFirst({
-      where: { id, organizationId: ctx.organizationId },
-      include: { events: { orderBy: { createdAt: 'asc' } } },
-    });
-
-    if (!payment) {
-      throw new NotFoundException(`Payment ${id} no encontrado`);
-    }
-
-    return {
-      ...this.serialize(payment),
-      events: payment.events,
-    };
-  }
-
-  // -------------------------------------------------------------------------
-  // REFUND
-  // -------------------------------------------------------------------------
-  async refund(
-    id: string,
-    body: { amountMinor?: number; reason?: string },
-    ctx: OrgContext,
-  ) {
-    const payment = await this.prisma.payment.findFirst({
-      where: { id, organizationId: ctx.organizationId },
-    });
-
-    if (!payment) {
-      throw new NotFoundException(`Payment ${id} no encontrado`);
-    }
-
-    if (payment.status !== PaymentStatus.CAPTURED &&
-        payment.status !== PaymentStatus.PARTIALLY_REFUNDED) {
-      throw new BadRequestException(
-        `No se puede refundar un pago en estado ${payment.status}`,
-      );
-    }
-
-    if (!payment.externalId) {
-      throw new BadRequestException('El pago no tiene externalId del provider');
-    }
-
-    const provider = this.registry.get(payment.providerId);
-
-    const result = await provider.refund({
-      externalId:  payment.externalId,
-      amountMinor: body.amountMinor ? BigInt(body.amountMinor) : undefined,
-      reason:      body.reason,
-    });
-
-    const newStatus = body.amountMinor &&
-      BigInt(body.amountMinor) < payment.amountMinor
-      ? PaymentStatus.PARTIALLY_REFUNDED
-      : PaymentStatus.REFUNDED;
-
-    assertValidTransition(payment.status, newStatus);
-
-    const [updatedPayment, refund] = await this.prisma.$transaction(async (tx) => {
-      const p = await tx.payment.update({
-        where: { id: payment.id },
-        data:  { status: newStatus },
-      });
-
-      const r = await tx.refund.create({
-        data: {
-          paymentId:        payment.id,
-          amountMinor:      body.amountMinor
-            ? BigInt(body.amountMinor)
-            : payment.amountMinor,
-          reason:           body.reason,
-          externalRefundId: result.externalRefundId,
-          status:           result.status,
-        },
-      });
-
-      await tx.paymentEvent.create({
-        data: {
-          paymentId: payment.id,
-          type:      'payment.refunded',
-          payload:   { refundId: r.id, status: result.status },
-        },
-      });
-
-      return [p, r];
-    });
-
-    await this.audit.log({
-      tenantId:       ctx.organizationId,
-      organizationId: ctx.organizationId,
-      actorId:        ctx.userId,
-      action:         'payment.refunded',
-      resourceId:     payment.id,
-      resourceType:   'Payment',
-      before:         { status: payment.status },
-      after:          { status: newStatus, refundId: refund.id },
-    });
-
-    return {
-      payment: this.serialize(updatedPayment),
-      refund: {
-        ...refund,
-        amountMinor: refund.amountMinor.toString(),
-      },
-    };
-  }
-
-  // -------------------------------------------------------------------------
-  // Helpers
-  // -------------------------------------------------------------------------
-  serialize(p: { amountMinor: bigint; [key: string]: unknown }) {
-    return {
-      ...p,
-      amountMinor: p.amountMinor.toString(),
-    };
-  }
-
-  private mapProviderStatus(s: string): PaymentStatus {
-    const map: Record<string, PaymentStatus> = {
-      pending:    PaymentStatus.PENDING,
-      authorized: PaymentStatus.AUTHORIZED,
-      captured:   PaymentStatus.CAPTURED,
-      failed:     PaymentStatus.FAILED,
-      cancelled:  PaymentStatus.CANCELLED,
-      refunded:   PaymentStatus.REFUNDED,
-    };
-    return map[s] ?? PaymentStatus.PENDING;
-  }
-}
-EOF
-
-# Actualizar PaymentsModule para incluir AuditService
-cat > src/modules/payments/payments.module.ts << 'EOF'
-// src/modules/payments/payments.module.ts
-import { BullModule } from '@nestjs/bullmq';
-import { Module } from '@nestjs/common';
-import { PaymentsController } from './payments.controller';
-import { PaymentsService } from './payments.service';
-import { ReconciliationService } from './reconciliation.service';
-import { ReconcileProcessor } from './reconcile.processor';
-import { FakeModule } from '../providers/adapters/fake/fake.module';
-import { QUEUE_RECONCILE } from '../../common/constants/queues';
-
-@Module({
-  imports: [
-    FakeModule,
-    BullModule.registerQueue({ name: QUEUE_RECONCILE }),
-  ],
-  controllers: [PaymentsController],
-  providers: [
-    PaymentsService,
-    ReconciliationService,
-    ReconcileProcessor,
-  ],
-  exports: [PaymentsService],
-})
-export class PaymentsModule {}
-EOF
-
-ok "Sprint 3 (código) completado."
-
-# =============================================================================
-# SPRINT 4 — AuthController limpio + AuthModule + AuditService actualizado
-# =============================================================================
-log "Sprint 4: AuthController SSO + AuditService con organizationId..."
-
-mkdir -p src/modules/auth
-
-# --- AuthController — solo expone /auth/me y /auth/sync ---
-cat > src/modules/auth/auth.controller.ts << 'EOF'
-// src/modules/auth/auth.controller.ts
-// Este sistema NO gestiona users ni orgs — eso lo hace el owner-dashboard.
-// Solo expone endpoints de utilidad para el contexto SSO.
-import {
-  Controller,
-  Get,
-  Post,
-  Headers,
-  UnauthorizedException,
-  UseGuards,
-  Logger,
-} from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiHeader } from '@nestjs/swagger';
-import { FirebaseAuthService } from '../firebase/firebase-auth.service';
-import { AuthGuard } from '../../common/guards/auth.guard';
-import { TenantGuard } from '../../common/guards/tenant.guard';
-import { OrgCtx } from '../../common/decorators/org.decorator';
-import type { OrgContext } from '../../common/interfaces/org-context.interface';
-import { Public } from '../../common/decorators/public.decorator';
-
-@ApiTags('auth')
-@ApiBearerAuth()
-@Controller({ path: 'auth', version: '1' })
-export class AuthController {
-  private readonly logger = new Logger(AuthController.name);
-
-  constructor(private readonly firebase: FirebaseAuthService) {}
-
-  /**
-   * GET /api/v1/auth/me
-   * Retorna el contexto del usuario actual en esta org.
-   * El frontend lo usa para saber si tiene acceso a este módulo.
-   */
-  @UseGuards(AuthGuard, TenantGuard)
-  @ApiHeader({ name: 'x-organization-id', required: true })
-  @Get('me')
-  me(@OrgCtx() ctx: OrgContext) {
-    return {
-      organizationId: ctx.organizationId,
-      userId:         ctx.userId,
-      canRead:        ctx.canRead,
-      canWrite:       ctx.canWrite,
-      product:        'payments',
-    };
-  }
-
-  /**
-   * POST /api/v1/auth/verify
-   * Verifica que un token Firebase es válido en este sistema.
-   * Útil para health checks de integración SSO.
-   */
-  @Public()
-  @Post('verify')
-  async verify(@Headers('authorization') authHeader: string) {
-    if (!authHeader?.startsWith('Bearer ')) {
-      throw new UnauthorizedException('Falta Bearer token');
-    }
-
-    const token   = authHeader.slice(7);
-    const decoded = await this.firebase.verifyToken(token);
-
-    return {
-      valid:          true,
-      uid:            decoded.uid,
-      email:          decoded.email,
-      hasPaymentsAccess: !!(
-        decoded.productPermissions?.['payments']?.canRead
-      ),
-    };
-  }
-}
-EOF
-
-# --- AuthModule actualizado ---
-cat > src/modules/auth/auth.module.ts << 'EOF'
-// src/modules/auth/auth.module.ts
-import { Module } from '@nestjs/common';
-import { AuthController } from './auth.controller';
-import { FirebaseModule } from '../firebase/firebase.module';
-import { FirebaseAuthService } from '../firebase/firebase-auth.service';
-
-@Module({
-  imports:     [FirebaseModule],
-  controllers: [AuthController],
-  providers:   [FirebaseAuthService],
-  exports:     [FirebaseAuthService],
-})
-export class AuthModule {}
-EOF
-
-# --- AuditService actualizado con organizationId ---
-cat > src/modules/audit/audit.service.ts << 'EOF'
-// src/modules/audit/audit.service.ts
-// Audit log inmutable (append-only).
-// Nunca se borran ni modifican registros — compliance PCI-DSS.
-import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-
-export type AuditAction =
-  | 'payment.created'
-  | 'payment.captured'
-  | 'payment.failed'
-  | 'payment.cancelled'
-  | 'payment.refunded'
-  | 'payment.status_changed'
-  | 'webhook.received'
-  | 'webhook.processed'
-  | 'apikey.created'
-  | 'apikey.revoked'
-  | 'tenant.created';
-
-export interface AuditEntry {
-  tenantId:       string;
-  organizationId?: string;
-  actorId?:       string;
-  action:         AuditAction;
-  resourceId:     string;
-  resourceType:   string;
-  before?:        Record<string, unknown>;
-  after?:         Record<string, unknown>;
-  metadata?:      Record<string, unknown>;
-  ip?:            string;
-}
-
-@Injectable()
-export class AuditService {
-  private readonly logger = new Logger(AuditService.name);
-
-  constructor(private readonly prisma: PrismaService) {}
-
-  async log(entry: AuditEntry): Promise<void> {
-    try {
-      await this.prisma.auditLog.create({
-        data: {
-          tenantId:     entry.tenantId,
-          organizationId: entry.organizationId ?? entry.tenantId,
-          actorId:      entry.actorId,
-          action:       entry.action,
-          resourceId:   entry.resourceId,
-          resourceType: entry.resourceType,
-          before:       entry.before   as any,
-          after:        entry.after    as any,
-          metadata:     entry.metadata as any,
-          ip:           entry.ip,
-        },
-      });
-    } catch (err) {
-      // El audit log NUNCA debe romper el flujo principal
-      this.logger.error(`Error al escribir audit log: ${err}`);
-    }
-  }
-
-  async findByOrg(organizationId: string, limit = 100) {
-    return this.prisma.auditLog.findMany({
-      where:   { organizationId },
-      orderBy: { createdAt: 'desc' },
-      take:    limit,
-    });
-  }
-
-  async findByResource(resourceId: string, organizationId: string) {
-    return this.prisma.auditLog.findMany({
-      where:   { resourceId, organizationId },
-      orderBy: { createdAt: 'asc' },
-    });
-  }
-}
-EOF
-
-ok "Sprint 4 completado."
-
-# =============================================================================
-# SPRINT 4b — AppModule + env.validation actualizados
-# =============================================================================
-log "Sprint 4b: AppModule y env.validation..."
-
-# --- env.validation actualizado con vars del ecosistema ---
-cat > src/config/env.validation.ts << 'EOF'
-// src/config/env.validation.ts
-import { z } from 'zod';
-
-export const envSchema = z.object({
-  NODE_ENV:  z.enum(['development', 'test', 'production']).default('development'),
-  PORT:      z.coerce.number().default(3000),
-
-  // ── Base de datos ────────────────────────────────────────────────────────
-  DATABASE_URL: z.string().url(),
-
-  // ── Redis ────────────────────────────────────────────────────────────────
-  REDIS_URL: z.string().url(),
-
-  // ── CORS ─────────────────────────────────────────────────────────────────
-  CORS_ORIGINS: z.string().default(''),
-
-  // ── Rate limiting ────────────────────────────────────────────────────────
-  THROTTLE_TTL:              z.coerce.number().default(60),
-  THROTTLE_LIMIT:            z.coerce.number().default(200),
-  THROTTLE_LIMIT_PER_TENANT: z.coerce.number().optional(),
-
-  // ── Logs ─────────────────────────────────────────────────────────────────
-  LOG_LEVEL: z.string().default('info'),
-
-  // ── Webhooks ─────────────────────────────────────────────────────────────
-  WEBHOOK_SIGNING_SECRET:          z.string().min(8).default('change-me'),
-  WEBHOOK_SIGNING_SECRET_PREVIOUS: z.string().optional(),
-  WEBHOOK_TOLERANCE_SECONDS:       z.coerce.number().default(300),
-
-  // ── Reconciliación ───────────────────────────────────────────────────────
-  RECONCILE_CRON: z.string().optional(),
-
-  // ── PII ──────────────────────────────────────────────────────────────────
-  PII_ENCRYPTION_KEY: z.string().length(64).optional(),
-  PII_SEARCH_SALT:    z.string().optional(),
-
-  // ── OpenTelemetry ────────────────────────────────────────────────────────
-  OTEL_ENABLED:                z.enum(['true', 'false']).default('false'),
-  OTEL_SERVICE_NAME:           z.string().default('pasarela-pagos'),
-  OTEL_EXPORTER_OTLP_ENDPOINT: z.string().url().optional(),
-
-  // ── Firebase (mismo proyecto que el owner-dashboard) ─────────────────────
-  // Opcionales: si no están, solo funciona el path x-api-key
-  FIREBASE_PROJECT_ID:   z.string().optional(),
-  FIREBASE_CLIENT_EMAIL: z.string().email().optional(),
-  FIREBASE_PRIVATE_KEY:  z.string().optional(),
-
-  // ── Ecosistema SSO ───────────────────────────────────────────────────────
-  // URL del owner-dashboard (para consultas de memberships si los claims están vacíos)
-  DASHBOARD_API_URL: z.string().url().optional(),
-
-  // ── Providers de pago ────────────────────────────────────────────────────
-  STRIPE_SECRET_KEY:          z.string().optional(),
-  STRIPE_WEBHOOK_SECRET:      z.string().optional(),
-  MERCADOPAGO_ACCESS_TOKEN:   z.string().optional(),
-  MERCADOPAGO_WEBHOOK_SECRET: z.string().optional(),
-  PAGARME_API_KEY:            z.string().optional(),
-  PAGARME_WEBHOOK_SECRET:     z.string().optional(),
-  CONEKTA_PRIVATE_KEY:        z.string().optional(),
-  CONEKTA_WEBHOOK_SECRET:     z.string().optional(),
-  DLOCAL_API_KEY:             z.string().optional(),
-  DLOCAL_SECRET_KEY:          z.string().optional(),
-});
-
-export type Env = z.infer<typeof envSchema>;
-EOF
-
-# --- AppModule actualizado ---
-cat > src/app.module.ts << 'EOF'
+## File: src/app.module.ts
+```typescript
 // src/app.module.ts
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -8817,166 +5739,329 @@ import { TenantThrottlerGuard } from './common/guards/tenant-throttler.guard';
   ],
 })
 export class AppModule {}
-EOF
+```
 
-ok "Sprint 4b completado."
+## File: src/instrumentation.ts
+```typescript
+/**
+ * OpenTelemetry — debe importarse ANTES que cualquier otro módulo.
+ *
+ * Variables de entorno:
+ *   OTEL_ENABLED=true
+ *   OTEL_EXPORTER_OTLP_ENDPOINT  → ej: http://localhost:4318
+ *   OTEL_SERVICE_NAME            → ej: pasarela-pagos
+ */
+import { NodeSDK } from '@opentelemetry/sdk-node';
+import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
+import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
+import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
+import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
-# =============================================================================
-# SPRINT 4c — .env.example actualizado
-# =============================================================================
-log "Sprint 4c: .env.example actualizado..."
+// En @opentelemetry/resources v2 el export nombrado "Resource" puede no existir
+// según el entrypoint que resuelve el bundler con "module": "nodenext".
+// Lo importamos con require() desde el CJS para garantizar que es un valor,
+// con un fallback a objeto vacío si el entorno no tiene OTel configurado.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const otelResources = require('@opentelemetry/resources');
+const ResourceClass  = otelResources.Resource ?? otelResources.default?.Resource ?? null;
 
-cat > .env.example << 'EOF'
-# ============================================================
-# Runtime
-# ============================================================
-NODE_ENV=development
-PORT=3000
+let sdk: NodeSDK | null = null;
 
-# ============================================================
-# Base de datos (Postgres)
-# ============================================================
-DATABASE_URL="postgresql://user:pass@localhost:5432/pasarela?schema=public"
+export function startTelemetry(): void {
+  if (process.env.OTEL_ENABLED !== 'true') return;
+  if (!ResourceClass) {
+    console.warn('[OTel] Resource no disponible — telemetría deshabilitada.');
+    return;
+  }
 
-# ============================================================
-# Redis (colas + idempotencia + rate limiting)
-# ============================================================
-REDIS_URL=redis://localhost:6379
+  const resource = new ResourceClass({
+    [ATTR_SERVICE_NAME]:    process.env.OTEL_SERVICE_NAME ?? 'pasarela-pagos',
+    [ATTR_SERVICE_VERSION]: process.env.npm_package_version ?? '0.0.1',
+    environment:            process.env.NODE_ENV ?? 'development',
+  });
 
-# ============================================================
-# CORS
-# ============================================================
-CORS_ORIGINS=http://localhost:3000,http://localhost:3001
+  sdk = new NodeSDK({
+    resource,
+    traceExporter: new OTLPTraceExporter({
+      url: `${process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? 'http://localhost:4318'}/v1/traces`,
+    }),
+    metricReader: new PeriodicExportingMetricReader({
+      exporter: new OTLPMetricExporter({
+        url: `${process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? 'http://localhost:4318'}/v1/metrics`,
+      }),
+      exportIntervalMillis: 15_000,
+    }),
+    instrumentations: [
+      getNodeAutoInstrumentations({
+        '@opentelemetry/instrumentation-http':    { enabled: true },
+        '@opentelemetry/instrumentation-express': { enabled: true },
+        '@opentelemetry/instrumentation-pg':      { enabled: true },
+        '@opentelemetry/instrumentation-ioredis': { enabled: true },
+        '@opentelemetry/instrumentation-fs':      { enabled: false },
+      }),
+    ],
+  });
 
-# ============================================================
-# Rate limiting por tenant (req por minuto)
-# ============================================================
-THROTTLE_TTL=60
-THROTTLE_LIMIT=200
-THROTTLE_LIMIT_PER_TENANT=200
+  sdk.start();
+  console.log('[OTel] Telemetría iniciada.');
+}
 
-# ============================================================
-# Webhook secrets — rotation: define el anterior durante la ventana
-# ============================================================
-WEBHOOK_SIGNING_SECRET=change-me-in-production
-WEBHOOK_SIGNING_SECRET_PREVIOUS=
-WEBHOOK_TOLERANCE_SECONDS=300
+export async function stopTelemetry(): Promise<void> {
+  if (sdk) await sdk.shutdown();
+}
+```
 
-# ============================================================
-# Logging
-# ============================================================
-LOG_LEVEL=info
+## File: src/main.ts
+```typescript
+// OTel DEBE ser el primer import — antes que cualquier módulo de NestJS
+import { startTelemetry, stopTelemetry } from './instrumentation';
+startTelemetry();
 
-# ============================================================
-# OpenTelemetry (opcional, default desactivado)
-# ============================================================
-OTEL_ENABLED=false
-OTEL_SERVICE_NAME=pasarela-pagos
-OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+import { NestFactory } from '@nestjs/core';
+import { ValidationPipe, VersioningType, Logger } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { Logger as PinoLogger } from 'nestjs-pino';
+import helmet from 'helmet';
+import compression from 'compression';
+import cookieParser from 'cookie-parser';
+import * as express from 'express';
+import { AppModule } from './app.module';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
-# ============================================================
-# Reconciliación (cron expression, default: cada 5 minutos)
-# ============================================================
-# RECONCILE_CRON=*/5 * * * *
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule, {
+    bufferLogs: true,
+    rawBody: true,
+  });
 
-# ============================================================
-# Firebase — mismo proyecto que el owner-dashboard
-# Obtener desde: Firebase Console → Configuración → Cuentas de servicio
-# ============================================================
-FIREBASE_PROJECT_ID=tu-proyecto-id
-FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@tu-proyecto.iam.gserviceaccount.com
-# Nota: los \n en la private key deben ser literales \\n en el .env
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIE...\n-----END PRIVATE KEY-----\n"
+  app.useLogger(app.get(PinoLogger));
 
-# ============================================================
-# Ecosistema SSO — URL del owner-dashboard
-# Usado para consultar memberships/permisos si los claims del token están vacíos
-# ============================================================
-DASHBOARD_API_URL=http://localhost:3001
+  // Raw body solo para webhooks (para verificar firmas HMAC)
+  app.use('/api/v1/webhooks', express.raw({ type: '*/*', limit: '1mb' }));
 
-# ============================================================
-# Providers de pago (solo los que uses)
-# ============================================================
+  app.use(helmet());
+  app.use(compression());
+  app.use(cookieParser());
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ extended: true }));
 
-# Stripe (US, EU, internacional)
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
+  app.enableCors({
+    origin: (process.env.CORS_ORIGINS ?? '').split(',').filter(Boolean),
+    credentials: true,
+  });
 
-# MercadoPago (AR, BR, MX, CO, CL, PE, UY)
-MERCADOPAGO_ACCESS_TOKEN=TEST-...
-MERCADOPAGO_WEBHOOK_SECRET=
+  app.setGlobalPrefix('api');
+  app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' });
 
-# Pagar.me (BR: card + PIX)
-PAGARME_API_KEY=ak_test_...
-PAGARME_WEBHOOK_SECRET=
+  // Graceful shutdown: espera que las conexiones activas terminen
+  app.enableShutdownHooks();
 
-# Conekta (MX: card + OXXO)
-CONEKTA_PRIVATE_KEY=key_test_...
-CONEKTA_WEBHOOK_SECRET=
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+      transformOptions: { enableImplicitConversion: true },
+    }),
+  );
 
-# dLocal (PE, CL, CO, UY y más)
-DLOCAL_API_KEY=
-DLOCAL_SECRET_KEY=
+  app.useGlobalFilters(new AllExceptionsFilter());
 
-# ============================================================
-# PII encryption (opcional, requerido en producción)
-# ============================================================
-# PII_ENCRYPTION_KEY=<64 char hex>
-# PII_SEARCH_SALT=<random string>
-EOF
+  if (process.env.NODE_ENV !== 'production') {
+    const swagger = new DocumentBuilder()
+      .setTitle('Pasarela de Pagos')
+      .setDescription('API multi-provider multi-tenant — Sprint 5')
+      .setVersion('1.0')
+      .addApiKey({ type: 'apiKey', in: 'header', name: 'x-api-key' }, 'x-api-key')
+      .build();
+    SwaggerModule.setup('docs', app, SwaggerModule.createDocument(app, swagger));
+  }
 
-ok "Sprint 4c completado."
+  const port = Number(process.env.PORT ?? 3000);
+  await app.listen(port);
 
-# =============================================================================
-# FINAL — Instalar dependencias + regenerar Prisma client
-# =============================================================================
-log "Instalando dependencias y regenerando Prisma client..."
+  const logger = new Logger('Bootstrap');
+  logger.log(`🚀 App corriendo en puerto ${port}`);
+  logger.log(`📖 Docs: http://localhost:${port}/docs`);
+  logger.log(`💚 Health: http://localhost:${port}/api/v1/health/ready`);
+}
 
-# Asegurar que firebase-admin esté en la versión más reciente
-pnpm add firebase-admin@latest
+void bootstrap();
+```
 
-# Generar el cliente Prisma (necesario después de agregar campos al schema)
-# NOTA: Primero aplicá el schema manual (Sprint 3) y corrés la migración
-# pnpm prisma generate
+## File: nest-cli.json
+```json
+{
+  "$schema": "https://json.schemastore.org/nest-cli",
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "src",
+  "compilerOptions": {
+    "deleteOutDir": true
+  }
+}
+```
 
-log "======================================================================"
-log "PASOS MANUALES REQUERIDOS ANTES DE COMPILAR:"
-log ""
-log "1. Editar prisma/schema.prisma — agregar organizationId a Payment,"
-log "   Customer y AuditLog (ver schema-sprint3.md para el SQL y los cambios)."
-log ""
-log "2. Crear la migración:"
-log "   pnpm prisma migrate dev --name sprint8_organization_id"
-log ""
-log "3. Regenerar el cliente Prisma:"
-log "   pnpm prisma generate"
-log ""
-log "4. Compilar y probar:"
-log "   pnpm build"
-log "   pnpm start:dev"
-log "======================================================================"
+## File: package.json
+```json
+{
+  "name": "pasarela-pagos",
+  "version": "0.0.1",
+  "description": "",
+  "author": "",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "build": "nest build",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "start": "nest start",
+    "start:dev": "nest start --watch",
+    "start:debug": "nest start --debug --watch",
+    "start:prod": "node dist/main",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage",
+    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate:dev": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:studio": "prisma studio",
+    "typecheck": "tsc --noEmit",
+    "db:seed": "prisma db seed",
+    "db:reset": "prisma migrate reset --force && prisma db seed"
+  },
+  "dependencies": {
+    "@nestjs/bullmq": "^11.0.4",
+    "@nestjs/cache-manager": "^3.1.0",
+    "@nestjs/common": "^11.0.1",
+    "@nestjs/config": "^4.0.4",
+    "@nestjs/core": "^11.0.1",
+    "@nestjs/event-emitter": "^3.0.1",
+    "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/schedule": "^6.1.3",
+    "@nestjs/swagger": "^11.3.0",
+    "@nestjs/terminus": "^11.1.1",
+    "@nestjs/throttler": "^6.5.0",
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/auto-instrumentations-node": "^0.73.0",
+    "@opentelemetry/exporter-metrics-otlp-http": "^0.215.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.215.0",
+    "@opentelemetry/resources": "^2.7.0",
+    "@opentelemetry/sdk-metrics": "^2.7.0",
+    "@opentelemetry/sdk-node": "^0.215.0",
+    "@opentelemetry/semantic-conventions": "^1.40.0",
+    "@prisma/client": "^7.7.0",
+    "argon2": "^0.44.0",
+    "axios": "^1.15.0",
+    "bcryptjs": "^3.0.3",
+    "bullmq": "^5.74.1",
+    "cache-manager": "^7.2.8",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
+    "compression": "^1.8.1",
+    "cookie-parser": "^1.4.7",
+    "decimal.js": "^10.6.0",
+    "dotenv": "^17.4.2",
+    "firebase-admin": "^13.8.0",
+    "helmet": "^8.1.0",
+    "mercadopago": "^2.12.0",
+    "nanoid": "^5.1.9",
+    "nestjs-pino": "^4.6.1",
+    "opossum": "^9.0.0",
+    "pino": "^10.3.1",
+    "pino-http": "^11.0.0",
+    "pino-pretty": "^13.1.3",
+    "prom-client": "^15.1.3",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1",
+    "stripe": "^22.0.2",
+    "uuid": "^13.0.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.2.0",
+    "@eslint/js": "^9.18.0",
+    "@nestjs/cli": "^11.0.0",
+    "@nestjs/schematics": "^11.0.0",
+    "@nestjs/testing": "^11.0.1",
+    "@types/bcryptjs": "^3.0.0",
+    "@types/cache-manager": "^5.0.0",
+    "@types/compression": "^1.8.1",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/express": "^5.0.0",
+    "@types/jest": "^30.0.0",
+    "@types/k6": "^1.7.0",
+    "@types/node": "^25.6.0",
+    "@types/opossum": "^8.1.9",
+    "@types/supertest": "^6.0.2",
+    "@types/uuid": "^11.0.0",
+    "eslint": "^9.18.0",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-prettier": "^5.2.2",
+    "globals": "^16.0.0",
+    "ioredis": "^5.10.1",
+    "jest": "^30.0.0",
+    "prettier": "^3.4.2",
+    "prisma": "^7.7.0",
+    "source-map-support": "^0.5.21",
+    "supertest": "^7.0.0",
+    "ts-jest": "^29.2.5",
+    "ts-loader": "^9.5.2",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.20.0"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
+    "rootDir": "src",
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "collectCoverageFrom": [
+      "**/*.(t|j)s"
+    ],
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  }
+}
+```
 
-echo ""
-ok "✅ Todos los sprints de código aplicados correctamente."
-echo ""
-echo "Archivos creados/modificados:"
-echo "  src/modules/firebase/firebase.module.ts          (Sprint 1)"
-echo "  src/modules/firebase/firebase-auth.service.ts    (Sprint 1)"
-echo "  src/common/guards/firebase-auth.guard.ts         (Sprint 1)"
-echo "  src/common/guards/auth.guard.ts                  (Sprint 1)"
-echo "  src/common/interfaces/org-context.interface.ts   (Sprint 2)"
-echo "  src/common/decorators/org.decorator.ts           (Sprint 2)"
-echo "  src/common/guards/tenant.guard.ts                (Sprint 2)"
-echo "  src/common/guards/write.guard.ts                 (Sprint 2)"
-echo "  src/modules/payments/payments.controller.ts      (Sprint 3)"
-echo "  src/modules/payments/payments.service.ts         (Sprint 3)"
-echo "  src/modules/payments/payments.module.ts          (Sprint 3)"
-echo "  src/modules/auth/auth.controller.ts              (Sprint 4)"
-echo "  src/modules/auth/auth.module.ts                  (Sprint 4)"
-echo "  src/modules/audit/audit.service.ts               (Sprint 4)"
-echo "  src/config/env.validation.ts                     (Sprint 4)"
-echo "  src/app.module.ts                                (Sprint 4)"
-echo "  .env.example                                     (Sprint 4)"
-</file>
-
-</files>
+## File: tsconfig.json
+```json
+{
+  "compilerOptions": {
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "resolvePackageJsonExports": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2023",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "incremental": true,
+    "skipLibCheck": true,
+    "strictNullChecks": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "noFallthroughCasesInSwitch": false
+  }
+}
+```
